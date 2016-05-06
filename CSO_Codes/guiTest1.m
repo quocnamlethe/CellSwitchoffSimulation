@@ -61,9 +61,13 @@ global guiHandle;
 
 guiHandle = handles;
 
-warning off;
-mkdir('data');
-warning on;
+CsoTest = CsoTestSet();
+
+if exist('data', 'dir') == 0
+    mkdir('data');
+end
+
+save('data/CsoTest.mat', 'CsoTest');
 
 % UIWAIT makes guiTest1 wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -89,48 +93,75 @@ function updateGui()
 % ModelParamters the model parameters
 
 global guiHandle;
+% 
+% load('data/model_parameters.mat', 'ModelParameters');
+% load('data/test1_base_stations.mat', 'test1_Bs_Locations');
+% load('data/test2_base_stations.mat', 'test2_Bs_Locations');
+% load('data/test3_base_stations.mat', 'test3_Bs_Locations');
+% load('data/test4_base_stations.mat', 'test4_Bs_Locations');
 
-load('data/model_parameters.mat', 'ModelParameters');
-load('data/test1_base_stations.mat', 'test1_Bs_Locations');
-load('data/test2_base_stations.mat', 'test2_Bs_Locations');
-load('data/test3_base_stations.mat', 'test3_Bs_Locations');
-load('data/test4_base_stations.mat', 'test4_Bs_Locations');
+load('data/CsoTest.mat', 'CsoTest');
 
-if isempty(test1_Bs_Locations)
-    return;
+ModelParameters = CsoTest.ModelParameters;
+
+for k = 1:4
+    if isempty(CsoTest.TestBs(k).ActiveBs)
+        return;
+    end
 end
 
-[CN, CV, CD] = CoV_Metrics(test1_Bs_Locations, ModelParameters);
+for k = 1:2 % TODO: Change to 4
+    Tag = CsoTest.TestBs(k).Tag;
+    CN = CsoTest.TestBs(k).CN;
+    CV = CsoTest.TestBs(k).CV;
+    CD = CsoTest.TestBs(k).CD;
 
-set(guiHandle.test1_cn_value,'String', CN);
-set(guiHandle.test1_cv_value,'String', CV);
-set(guiHandle.test1_cd_value,'String', CD);
+    cn_value_tag = strcat(Tag,'_cn_value');
+    cv_value_tag = strcat(Tag,'_cv_value');
+    cd_value_tag = strcat(Tag,'_cd_value');
 
-xp = test1_Bs_Locations(:,1);
-yp = test1_Bs_Locations(:,2);
+    set(guiHandle.(genvarname(cn_value_tag)),'String', sprintf('%.5f',CN));
+    set(guiHandle.(genvarname(cv_value_tag)),'String', sprintf('%.5f',CV));
+    set(guiHandle.(genvarname(cd_value_tag)),'String', sprintf('%.5f',CD));
 
-axes(guiHandle.test1_axes);
+    xp = CsoTest.TestBs(k).ActiveBs(:,1);
+    yp = CsoTest.TestBs(k).ActiveBs(:,2);
+    
+    if isempty(CsoTest.TestBs(k).InactiveBs)
+        inactivex = [];
+        inactivey = [];
+    else
+        inactivex = CsoTest.TestBs(k).InactiveBs(:,1);
+        inactivey = CsoTest.TestBs(k).InactiveBs(:,2);
+    end
+    
+    axes(guiHandle.(genvarname(strcat(Tag, '_axes'))));
 
-hplot = plot(guiHandle.test1_axes,xp,yp,'+b','linewidth',2);
-set(hplot,'HitTest','off');
-set(gcf,'WindowButtonDownFcn',@test1_axes_ButtonDownFcn);
-set(hplot,'ButtonDownFcn',@test1_axes_ButtonDownFcn);
-hold on
+    hplot = plot(guiHandle.(genvarname(strcat(Tag, '_axes'))),xp,yp,'+b','linewidth',2);
+    set(hplot,'HitTest','off');
+    set(gcf,'WindowButtonDownFcn',@test1_axes_ButtonDownFcn);
+    set(hplot,'ButtonDownFcn',@test1_axes_ButtonDownFcn);
+    hold on
 
-delaunay(xp,yp);
-DT=delaunayTriangulation(xp,yp);
+    delaunay(xp,yp);
+    DT=delaunayTriangulation(xp,yp);
 
-triplot(DT,':g','linewidth',2)
-hold on 
-box on
-[vxp,vyp] = voronoi(xp,yp);
-plot(xp,yp,'r+',vxp,vyp,'r-','linewidth',2)
-axis([-500 500 -500 500]);
-% set(gca,'fontsize',14)
-ax=gca; 
-ax.XTick=0;
-ax.YTick=0;
-hold off
+    triplot(DT,':g','linewidth',2)
+    hold on 
+    box on
+    [vxp,vyp] = voronoi(xp,yp);
+    plot(xp,yp,'r+',vxp,vyp,'r-','linewidth',2)
+    axis([-500 500 -500 500]);
+    % set(gca,'fontsize',14)
+    ax=gca; 
+    ax.XTick=0;
+    ax.YTick=0;
+    hold on
+    
+    grey = [0.4,0.4,0.4,0.4];
+    hplot = plot(guiHandle.(genvarname(strcat(Tag, '_axes'))),inactivex,inactivey,'+','linewidth',2,'Color',grey);
+    hold off
+end
 
 % --- Executes on mouse press over axes background.
 function test1_axes_ButtonDownFcn(hObject, eventdata, handles)
@@ -138,31 +169,32 @@ function test1_axes_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+    load('data/CsoTest.mat', 'CsoTest');
+    
+    ModelParameters = CsoTest.ModelParameters;
+    
     ax = gca;
     panel = get(ax, 'Parent');
     
     panelTag = get(panel, 'Tag');
     
-    load('data/model_parameters.mat', 'ModelParameters');
+    Test = 0;
     
-    if isequal(panelTag, 'test1_panel')
-        load('data/test1_base_stations.mat', 'test1_Bs_Locations');
+    for k = 1:4
+        Tag = CsoTest.TestBs(k).Tag;
+        if isequal(panelTag, strcat(Tag,'_panel'))
+            Bs_Locations = [CsoTest.TestBs(k).ActiveBs ; CsoTest.TestBs(k).InactiveBs];
+            activeNum = length(CsoTest.TestBs(k).ActiveBs);
+            Test = k;
+        end
+    end
+    
+    if Test == 0 || isempty(Bs_Locations)
+        return;
     end
     
     point = get(hObject, 'currentpoint');
     panelpos = get(panel, 'Position');
-    win = ModelParameters.win;
-    rangex = win(2) - win(1);
-    rangey = win(4) - win(3);
-    widthx = ax.Position(3);
-    widthy = ax.Position(4);
-    minx = win(1);
-    miny = win(3);
-    posx = (point(1) - ax.Position(1) - panelpos(1))*rangex/widthx + minx;
-    posy = (point(2) - ax.Position(2) - panelpos(2))*rangey/widthy + miny;
-    
-    mindist = sqrt((test1_Bs_Locations(1,1) - posx)^2 + (test1_Bs_Locations(1,2) - posy)^2);
-    mink = 1;
     
     posleft = ax.Position(1) + panelpos(1);
     posright = ax.Position(1) + ax.Position(3) + panelpos(1);
@@ -170,16 +202,38 @@ function test1_axes_ButtonDownFcn(hObject, eventdata, handles)
     postop = ax.Position(2) + ax.Position(4) + panelpos(2);
     
     if point(1) >= posleft && point(1) <= posright && point(2) >= posbot && point(2) <= postop
-        fprintf('Point the was pressed: %f, %f\n', posx, posy);
-        for k = 1:length(test1_Bs_Locations)
-            if mindist > sqrt((test1_Bs_Locations(k,1) - posx)^2 + (test1_Bs_Locations(k,2) - posy)^2)
+        win = ModelParameters.win;
+        rangex = win(2) - win(1);
+        rangey = win(4) - win(3);
+        widthx = ax.Position(3);
+        widthy = ax.Position(4);
+        minx = win(1);
+        miny = win(3);
+        posx = (point(1) - ax.Position(1) - panelpos(1))*rangex/widthx + minx;
+        posy = (point(2) - ax.Position(2) - panelpos(2))*rangey/widthy + miny;
+
+        mindist = sqrt((Bs_Locations(1,1) - posx)^2 + (Bs_Locations(1,2) - posy)^2);
+        mink = 1;
+        for k = 1:length(Bs_Locations)
+            if mindist > sqrt((Bs_Locations(k,1) - posx)^2 + (Bs_Locations(k,2) - posy)^2)
                 mink = k;
-                mindist = sqrt((test1_Bs_Locations(k,1) - posx)^2 + (test1_Bs_Locations(k,2) - posy)^2);
+                mindist = sqrt((Bs_Locations(k,1) - posx)^2 + (Bs_Locations(k,2) - posy)^2);
             end
         end
-        test1_Bs_Locations(mink,:) = [];
+        if (mink <= activeNum)
+            CsoTest.TestBs(Test).InactiveBs = [CsoTest.TestBs(Test).InactiveBs; Bs_Locations(mink,:)];
+            CsoTest.TestBs(Test).ActiveBs(mink,:) = [];
+        else
+            CsoTest.TestBs(Test).ActiveBs = [CsoTest.TestBs(Test).ActiveBs; Bs_Locations(mink,:)];
+            CsoTest.TestBs(Test).InactiveBs((mink - activeNum),:) = [];
+        end
+        
+        [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(Test).ActiveBs, ModelParameters);
+        CsoTest.TestBs(Test).CN = CN;
+        CsoTest.TestBs(Test).CV = CV;
+        CsoTest.TestBs(Test).CD = CD;
 
-        save('data/test1_base_stations.mat', 'test1_Bs_Locations');
+        save('data/CsoTest.mat', 'CsoTest');
         updateGui();
     end
 
@@ -192,6 +246,8 @@ function perturbation_slider_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+perturbation = get(handles.perturbation_slider, 'Value');
+set(handles.perturbation_value, 'String', perturbation);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -211,26 +267,41 @@ function generatebs_Callback(hObject, eventdata, handles)
 % hObject    handle to generatebs (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global guiHandle;
+
+    load('data/CsoTest.mat', 'CsoTest');
+
+    perturbation = get(handles.perturbation_slider, 'Value');
     
-    perturbation = get(guiHandle.perturbation_slider, 'Value');
-    
-    ModelParameters=ModelParaSet();
+    ModelParameters = ModelParaSet();
     ModelParameters.lambda=100e-6;          
     ModelParameters.alpha_norm=perturbation;
 
     [Bs_Locations]= UT_LatticeBased('hexUni' , ModelParameters);
-    test1_Bs_Locations = Bs_Locations;
-    test2_Bs_Locations = Bs_Locations;
-    test3_Bs_Locations = Bs_Locations;
-    test4_Bs_Locations = Bs_Locations;
+    
+    CsoTest.ModelParameters = ModelParameters;
+    CsoTest.InitialBs = Bs_Locations;
+    
+    for k = 1:4
+        CsoTest.TestBs(k).ActiveBs = Bs_Locations;
+        [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
+        CsoTest.TestBs(k).CN = CN;
+        CsoTest.TestBs(k).CV = CV;
+        CsoTest.TestBs(k).CD = CD;
+    end
+    
+    save('data/CsoTest.mat', 'CsoTest');
+    
+%     test1_Bs_Locations = Bs_Locations;
+%     test2_Bs_Locations = Bs_Locations;
+%     test3_Bs_Locations = Bs_Locations;
+%     test4_Bs_Locations = Bs_Locations;
 
-    save('data/model_parameters.mat', 'ModelParameters');
-    save('data/initial_base_stations.mat', 'Bs_Locations');
-    save('data/test1_base_stations.mat', 'test1_Bs_Locations');
-    save('data/test2_base_stations.mat', 'test2_Bs_Locations');
-    save('data/test3_base_stations.mat', 'test3_Bs_Locations');
-    save('data/test4_base_stations.mat', 'test4_Bs_Locations');
+%     save('data/model_parameters.mat', 'ModelParameters');
+%     save('data/initial_base_stations.mat', 'Bs_Locations');
+%     save('data/test1_base_stations.mat', 'test1_Bs_Locations');
+%     save('data/test2_base_stations.mat', 'test2_Bs_Locations');
+%     save('data/test3_base_stations.mat', 'test3_Bs_Locations');
+%     save('data/test4_base_stations.mat', 'test4_Bs_Locations');
 
     updateGui();
 

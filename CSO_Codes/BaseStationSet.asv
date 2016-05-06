@@ -1,0 +1,19 @@
+function [BaseStations] = BaseStationSet()
+%UNTITLED3 Summary of this function goes here
+%   Detailed explanation goes here
+
+    Activebs = [];
+    inactivebs = [];
+    cn = 0;
+    cv = 0;
+    cd = 0;
+    
+    BaseStations = struct('activebs', activebs, ...
+                           'inactivebs', inactivebs, ...
+                           'cn', cn, ...
+                           'cv', cv, ...
+                           'cd', cd ...
+                           );
+
+end
+
