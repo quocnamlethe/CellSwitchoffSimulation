@@ -1,0 +1,38 @@
+% load('data/CsoTest1.mat', 'CsoTest');
+% 
+% CsoTest.TestBs(1).ActiveBs = CsoTest.InitialBs;
+% CsoTest.TestBs(1).InactiveBs = [];
+
+ModelParameters = ModelParaSet();
+ModelParameters.lambda = 100e-6;          
+ModelParameters.alpha_norm = 1;
+
+for 
+[Bs_Locations]= UT_LatticeBased('hexUni' , ModelParameters);
+
+CsoTest.ModelParameters = ModelParameters;
+CsoTest.InitialBs = Bs_Locations;
+
+for k = 1:4
+    CsoTest.TestBs(k).ActiveBs = Bs_Locations;
+    [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
+    CsoTest.TestBs(k).CN = CN;
+    CsoTest.TestBs(k).CV = CV;
+    CsoTest.TestBs(k).CD = CD;
+end
+
+for k = 1:30
+    DD = pdist2(CsoTest.TestBs(1).ActiveBs, CsoTest.TestBs(1).ActiveBs);
+    DD(DD==0) = inf;
+    [Nearest,index] = min(DD);
+    [point, index] = min(Nearest);
+    CsoTest.TestBs(1).InactiveBs = [CsoTest.TestBs(1).InactiveBs; CsoTest.TestBs(1).ActiveBs(index,:)];
+    CsoTest.TestBs(1).ActiveBs(index,:) = [];
+end
+
+save('data/testing.mat', 'CsoTest');
+
+load('data/CsoTest1.mat', 'CsoTest');
+
+CsoTest.TestBs(1).ActiveBs = CsoTest.InitialBs;
+CsoTest.TestBs(1).InactiveBs = [];

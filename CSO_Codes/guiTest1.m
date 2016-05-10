@@ -22,7 +22,7 @@ function varargout = guiTest1(varargin)
 
 % Edit the above text to modify the response to help guiTest1
 
-% Last Modified by GUIDE v2.5 05-May-2016 11:55:19
+% Last Modified by GUIDE v2.5 09-May-2016 10:36:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -104,11 +104,27 @@ load('data/CsoTest.mat', 'CsoTest');
 
 ModelParameters = CsoTest.ModelParameters;
 
+set(guiHandle.perturbation_slider, 'Value', ModelParameters.alpha_norm);
+set(guiHandle.perturbation_value, 'String', ModelParameters.alpha_norm);
+
 for k = 1:4
     if isempty(CsoTest.TestBs(k).ActiveBs)
         return;
     end
 end
+
+Tag = 'initial';
+CN = CsoTest.InitialBs.CN;
+CV = CsoTest.InitialBs.CV;
+CD = CsoTest.InitialBs.CD;
+
+cn_value_tag = strcat(Tag,'_cn_value');
+cv_value_tag = strcat(Tag,'_cv_value');
+cd_value_tag = strcat(Tag,'_cd_value');
+
+set(guiHandle.(genvarname(cn_value_tag)),'String', sprintf('%.5f',CN));
+set(guiHandle.(genvarname(cv_value_tag)),'String', sprintf('%.5f',CV));
+set(guiHandle.(genvarname(cd_value_tag)),'String', sprintf('%.5f',CD));
 
 for k = 1:2 % TODO: Change to 4
     Tag = CsoTest.TestBs(k).Tag;
@@ -136,22 +152,25 @@ for k = 1:2 % TODO: Change to 4
     end
     
     axes(guiHandle.(genvarname(strcat(Tag, '_axes'))));
+    axesHandle = guiHandle.(genvarname(strcat(Tag, '_axes')));
 
     hplot = plot(guiHandle.(genvarname(strcat(Tag, '_axes'))),xp,yp,'+b','linewidth',2);
     set(hplot,'HitTest','off');
     set(gcf,'WindowButtonDownFcn',@test1_axes_ButtonDownFcn);
     set(hplot,'ButtonDownFcn',@test1_axes_ButtonDownFcn);
-    hold on
+    hold(axesHandle,'on');
 
     delaunay(xp,yp);
     DT=delaunayTriangulation(xp,yp);
 
+    axes(axesHandle);
     triplot(DT,':g','linewidth',2)
-    hold on 
+    hold(axesHandle,'on'); 
     box on
     [vxp,vyp] = voronoi(xp,yp);
-    plot(xp,yp,'r+',vxp,vyp,'r-','linewidth',2)
-    axis([-500 500 -500 500]);
+    plot(axesHandle,xp,yp,'r+',vxp,vyp,'r-','linewidth',2)
+    hold(axesHandle,'on');
+    axis(axesHandle,[-500 500 -500 500]);
     % set(gca,'fontsize',14)
     ax=gca; 
     ax.XTick=0;
@@ -273,16 +292,22 @@ function generatebs_Callback(hObject, eventdata, handles)
     perturbation = get(handles.perturbation_slider, 'Value');
     
     ModelParameters = ModelParaSet();
-    ModelParameters.lambda=100e-6;          
-    ModelParameters.alpha_norm=perturbation;
+    ModelParameters.lambda = 100e-6;          
+    ModelParameters.alpha_norm = perturbation;
 
     [Bs_Locations]= UT_LatticeBased('hexUni' , ModelParameters);
     
     CsoTest.ModelParameters = ModelParameters;
-    CsoTest.InitialBs = Bs_Locations;
+    CsoTest.InitialBs.ActiveBs = Bs_Locations;
+    
+    [CN, CV, CD] = CoV_Metrics(CsoTest.InitialBs, ModelParameters);
+    CsoTest.InitialBs.CN = CN;
+    CsoTest.InitialBs.CV = CV;
+    CsoTest.InitialBs.CD = CD;
     
     for k = 1:4
         CsoTest.TestBs(k).ActiveBs = Bs_Locations;
+        CsoTest.TestBs(k).InactiveBs = [];
         [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
         CsoTest.TestBs(k).CN = CN;
         CsoTest.TestBs(k).CV = CV;
@@ -328,3 +353,69 @@ function generatebs_ButtonDownFcn(hObject, eventdata, handles)
     updateGui();
     
     
+
+
+% --- Executes on button press in saveplots.
+function saveplots_Callback(hObject, eventdata, handles)
+% hObject    handle to saveplots (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+load('data/CsoTest.mat', 'CsoTest');
+[FileName,PathName] = uiputfile('.mat');
+
+save(strcat(PathName,FileName), 'CsoTest');
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over saveplots.
+function saveplots_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to saveplots (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+% --- Executes on button press in loadplot.
+function loadplot_Callback(hObject, eventdata, handles)
+% hObject    handle to loadplot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+[FileName,PathName,FilterIndex] = uigetfile('.mat');
+
+if FileName ~= 0
+    load(strcat(PathName,FileName), 'CsoTest');
+    save('data/CsoTest.mat', 'CsoTest');
+    updateGui();
+end
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over loadplot.
+function loadplot_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to loadplot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in test1_reset.
+function test1_reset_Callback(hObject, eventdata, handles)
+% hObject    handle to test1_reset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+load('data/CsoTest.mat', 'CsoTest');
+CsoTest.TestBs(1).ActiveBs = CsoTest.InitialBs;
+CsoTest.TestBs(1).InactiveBs = [];
+[CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(1).ActiveBs, CsoTest.ModelParameters);
+CsoTest.TestBs(1).CN = CN;
+CsoTest.TestBs(1).CV = CV;
+CsoTest.TestBs(1).CD = CD;
+save('data/CsoTest.mat', 'CsoTest');
+updateGui();
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over test1_reset.
+function test1_reset_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to test1_reset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

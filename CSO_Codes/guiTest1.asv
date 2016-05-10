@@ -22,7 +22,7 @@ function varargout = guiTest1(varargin)
 
 % Edit the above text to modify the response to help guiTest1
 
-% Last Modified by GUIDE v2.5 05-May-2016 11:55:19
+% Last Modified by GUIDE v2.5 09-May-2016 10:23:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -104,6 +104,9 @@ load('data/CsoTest.mat', 'CsoTest');
 
 ModelParameters = CsoTest.ModelParameters;
 
+set(guiHandle.perturbation_slider, 'Value', ModelParameters.alpha_norm);
+set(guiHandle.perturbation_value, 'String', ModelParameters.alpha_norm);
+
 for k = 1:4
     if isempty(CsoTest.TestBs(k).ActiveBs)
         return;
@@ -183,7 +186,8 @@ function test1_axes_ButtonDownFcn(hObject, eventdata, handles)
     for k = 1:4
         Tag = CsoTest.TestBs(k).Tag;
         if isequal(panelTag, strcat(Tag,'_panel'))
-            Bs_Locations = CsoTest.TestBs(k).ActiveBs;
+            Bs_Locations = [CsoTest.TestBs(k).ActiveBs ; CsoTest.TestBs(k).InactiveBs];
+            activeNum = length(CsoTest.TestBs(k).ActiveBs);
             Test = k;
         end
     end
@@ -213,17 +217,19 @@ function test1_axes_ButtonDownFcn(hObject, eventdata, handles)
 
         mindist = sqrt((Bs_Locations(1,1) - posx)^2 + (Bs_Locations(1,2) - posy)^2);
         mink = 1;
-        active = 1;
         for k = 1:length(Bs_Locations)
             if mindist > sqrt((Bs_Locations(k,1) - posx)^2 + (Bs_Locations(k,2) - posy)^2)
-                active = 1;
                 mink = k;
                 mindist = sqrt((Bs_Locations(k,1) - posx)^2 + (Bs_Locations(k,2) - posy)^2);
             end
         end
-        for k = 1:length(Bs_Locations
-        CsoTest.TestBs(Test).InactiveBs = [CsoTest.TestBs(Test).InactiveBs; Bs_Locations(mink,:)];
-        CsoTest.TestBs(Test).ActiveBs(mink,:) = [];
+        if (mink <= activeNum)
+            CsoTest.TestBs(Test).InactiveBs = [CsoTest.TestBs(Test).InactiveBs; Bs_Locations(mink,:)];
+            CsoTest.TestBs(Test).ActiveBs(mink,:) = [];
+        else
+            CsoTest.TestBs(Test).ActiveBs = [CsoTest.TestBs(Test).ActiveBs; Bs_Locations(mink,:)];
+            CsoTest.TestBs(Test).InactiveBs((mink - activeNum),:) = [];
+        end
         
         [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(Test).ActiveBs, ModelParameters);
         CsoTest.TestBs(Test).CN = CN;
@@ -270,8 +276,8 @@ function generatebs_Callback(hObject, eventdata, handles)
     perturbation = get(handles.perturbation_slider, 'Value');
     
     ModelParameters = ModelParaSet();
-    ModelParameters.lambda=100e-6;          
-    ModelParameters.alpha_norm=perturbation;
+    ModelParameters.lambda = 100e-6;          
+    ModelParameters.alpha_norm = perturbation;
 
     [Bs_Locations]= UT_LatticeBased('hexUni' , ModelParameters);
     
@@ -325,3 +331,45 @@ function generatebs_ButtonDownFcn(hObject, eventdata, handles)
     updateGui();
     
     
+
+
+% --- Executes on button press in saveplots.
+function saveplots_Callback(hObject, eventdata, handles)
+% hObject    handle to saveplots (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+load('data/CsoTest.mat', 'CsoTest');
+[FileName,PathName] = uiputfile('.mat');
+
+save(strcat(PathName,FileName), 'CsoTest');
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over saveplots.
+function saveplots_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to saveplots (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+% --- Executes on button press in loadplot.
+function loadplot_Callback(hObject, eventdata, handles)
+% hObject    handle to loadplot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+[FileName,PathName,FilterIndex] = uigetfile('.mat');
+
+if FileName ~= 0
+    load(strcat(PathName,FileName), 'CsoTest');
+    save('data/CsoTest.mat', 'CsoTest');
+    updateGui();
+end
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over loadplot.
+function loadplot_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to loadplot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
