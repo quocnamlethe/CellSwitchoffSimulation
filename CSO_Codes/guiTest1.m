@@ -300,7 +300,7 @@ function generatebs_Callback(hObject, eventdata, handles)
     CsoTest.ModelParameters = ModelParameters;
     CsoTest.InitialBs.ActiveBs = Bs_Locations;
     
-    [CN, CV, CD] = CoV_Metrics(CsoTest.InitialBs, ModelParameters);
+    [CN, CV, CD] = CoV_Metrics(CsoTest.InitialBs.ActiveBs, ModelParameters);
     CsoTest.InitialBs.CN = CN;
     CsoTest.InitialBs.CV = CV;
     CsoTest.InitialBs.CD = CD;
