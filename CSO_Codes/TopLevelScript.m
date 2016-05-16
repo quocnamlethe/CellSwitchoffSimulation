@@ -1,6 +1,6 @@
 ModelParameters = ModelParaSet();
 ModelParameters.lambda = 100e-6;          
-ModelParameters.alpha_norm = 0.6;
+ModelParameters.alpha_norm = 0;
 CsoTest = CsoTestSet();
 CsoTest.ModelParameters = ModelParameters;
 
@@ -22,7 +22,7 @@ for k = 1:4
     CsoTest.TestBs(k).CD = CD;
 end
 
-CsoTest.TestBs(1) = MinEdgeSO(CsoTest.TestBs(1),0.50);
+CsoTest.TestBs(1) = MaxRegSo(CsoTest.TestBs(1),2/3,ModelParameters);
 
 for k = 1:4
     [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);

@@ -94,8 +94,10 @@ function [BaseStationSO] = MinEdgeSO(BaseStation,percentSO)
         
         A = zeros(length(BaseStation.ActiveBs),1); 
         for i = 1:length(BaseStation.ActiveBs)
-            index = find(Eb(:,1) == i || Eb(:,2) == i);
-            A(i) = sum(D(index)) / length(index);
+            index = find(Eb(:,:) == i);
+            index = mod(index(:,1),length(D)) + 1;
+            S = sum(D(index));
+            A(i) = S / length(index);
         end
         
         [Closest,index] = min(A);

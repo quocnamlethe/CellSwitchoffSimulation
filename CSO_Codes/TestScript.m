@@ -22,7 +22,7 @@ cdplotm3 = [];
 cdplotm4 = [];
 
 warning off;
-for l = 1:10
+for l = 0:10
     ModelParameters.alpha_norm = 0.1 * l;
     CsoTest.ModelParameters = ModelParameters;
     
@@ -45,10 +45,10 @@ for l = 1:10
             CsoTest.TestBs(k).CD = CD;
         end
 
-        CsoTest.TestBs(1) = AverageNearestSO(CsoTest.TestBs(1),0.50,1);
-        CsoTest.TestBs(2) = AverageNearestSO(CsoTest.TestBs(2),0.50,2);
-        CsoTest.TestBs(3) = MinEdgeSO(CsoTest.TestBs(3),0.50);
-        CsoTest.TestBs(4) = NumNearestSO(CsoTest.TestBs(4),0.50);
+        CsoTest.TestBs(1) = MaxRegSo(CsoTest.TestBs(1),2/3,ModelParameters);
+        CsoTest.TestBs(2) = MaxRegSo(CsoTest.TestBs(2),3/4,ModelParameters);
+        CsoTest.TestBs(3) = MaxRegSo(CsoTest.TestBs(3),7/9,ModelParameters);
+        CsoTest.TestBs(4) = MaxRegSo(CsoTest.TestBs(4),8/9,ModelParameters);
 
         for k = 1:4
             [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
@@ -57,20 +57,20 @@ for l = 1:10
             CsoTest.TestBs(k).CD = CD;
         end
         
-        cnplotm1 = [cnplotm1 ; CsoTest.InitialBs.CN, CsoTest.InitialBs.CN - CsoTest.TestBs(1).CN];
-        cnplotm2 = [cnplotm2 ; CsoTest.InitialBs.CN, CsoTest.InitialBs.CN - CsoTest.TestBs(2).CN];
-        cnplotm3 = [cnplotm3 ; CsoTest.InitialBs.CN, CsoTest.InitialBs.CN - CsoTest.TestBs(3).CN];
-        cnplotm4 = [cnplotm4 ; CsoTest.InitialBs.CN, CsoTest.InitialBs.CN - CsoTest.TestBs(4).CN];
+        cnplotm1 = [cnplotm1 ; CsoTest.InitialBs.CN, CsoTest.TestBs(1).CN];
+        cnplotm2 = [cnplotm2 ; CsoTest.InitialBs.CN, CsoTest.TestBs(2).CN];
+        cnplotm3 = [cnplotm3 ; CsoTest.InitialBs.CN, CsoTest.TestBs(3).CN];
+        cnplotm4 = [cnplotm4 ; CsoTest.InitialBs.CN, CsoTest.TestBs(4).CN];
         
-        cvplotm1 = [cvplotm1 ; CsoTest.InitialBs.CV, CsoTest.InitialBs.CV - CsoTest.TestBs(1).CV];
-        cvplotm2 = [cvplotm2 ; CsoTest.InitialBs.CV, CsoTest.InitialBs.CV - CsoTest.TestBs(2).CV];
-        cvplotm3 = [cvplotm3 ; CsoTest.InitialBs.CV, CsoTest.InitialBs.CV - CsoTest.TestBs(3).CV];
-        cvplotm4 = [cvplotm4 ; CsoTest.InitialBs.CV, CsoTest.InitialBs.CV - CsoTest.TestBs(4).CV];
+        cvplotm1 = [cvplotm1 ; CsoTest.InitialBs.CV, CsoTest.TestBs(1).CV];
+        cvplotm2 = [cvplotm2 ; CsoTest.InitialBs.CV, CsoTest.TestBs(2).CV];
+        cvplotm3 = [cvplotm3 ; CsoTest.InitialBs.CV, CsoTest.TestBs(3).CV];
+        cvplotm4 = [cvplotm4 ; CsoTest.InitialBs.CV, CsoTest.TestBs(4).CV];
         
-        cdplotm1 = [cdplotm1 ; CsoTest.InitialBs.CD, CsoTest.InitialBs.CD - CsoTest.TestBs(1).CD];
-        cdplotm2 = [cdplotm2 ; CsoTest.InitialBs.CD, CsoTest.InitialBs.CD - CsoTest.TestBs(2).CD];
-        cdplotm3 = [cdplotm3 ; CsoTest.InitialBs.CD, CsoTest.InitialBs.CD - CsoTest.TestBs(3).CD];
-        cdplotm4 = [cdplotm4 ; CsoTest.InitialBs.CD, CsoTest.InitialBs.CD - CsoTest.TestBs(4).CD];
+        cdplotm1 = [cdplotm1 ; CsoTest.InitialBs.CD, CsoTest.TestBs(1).CD];
+        cdplotm2 = [cdplotm2 ; CsoTest.InitialBs.CD, CsoTest.TestBs(2).CD];
+        cdplotm3 = [cdplotm3 ; CsoTest.InitialBs.CD, CsoTest.TestBs(3).CD];
+        cdplotm4 = [cdplotm4 ; CsoTest.InitialBs.CD, CsoTest.TestBs(4).CD];
 
 %         save(strcat('data/testing',num2str(j),'.mat'), 'CsoTest');
     end
@@ -103,7 +103,7 @@ hold on;
 plot(x,polyval(p1,x),'-r',x,polyval(p2,x),'-b',x,polyval(p3,x),'-g',x,polyval(p4,x),'-m');
 hold on;
 
-axis([0 1 -1 1]);
+axis([0 1 0 1]);
 title('CN');
 legend('Random Minimum Distance SO','Three Nearest Neighbour SO','Maximum Being Nearest Neigbour SO','Minimum Distance and Second Nearest Neighbour SO');
 hold off;
@@ -129,7 +129,7 @@ hold on;
 plot(x,polyval(p1,x),'-r',x,polyval(p2,x),'-b',x,polyval(p3,x),'-g',x,polyval(p4,x),'-m');
 hold on;
 
-axis([0 1 -1 1]);
+axis([0 1 0 1]);
 title('CV');
 legend('Random Minimum Distance SO','Three Nearest Neighbour SO','Maximum Being Nearest Neigbour SO','Minimum Distance and Second Nearest Neighbour SO');
 hold off;
@@ -155,7 +155,7 @@ hold on;
 plot(x,polyval(p1,x),'-r',x,polyval(p2,x),'-b',x,polyval(p3,x),'-g',x,polyval(p4,x),'-m');
 hold on;
 
-axis([0 1 -1 1]);
+axis([0 1 0 1]);
 title('CD');
 legend('Random Minimum Distance SO','Three Nearest Neighbour SO','Maximum Being Nearest Neigbour SO','Minimum Distance and Second Nearest Neighbour SO');
 hold off;

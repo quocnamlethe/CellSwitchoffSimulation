@@ -404,7 +404,7 @@ function test1_reset_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 load('data/CsoTest.mat', 'CsoTest');
-CsoTest.TestBs(1).ActiveBs = CsoTest.InitialBs;
+CsoTest.TestBs(1).ActiveBs = CsoTest.InitialBs.ActiveBs;
 CsoTest.TestBs(1).InactiveBs = [];
 [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(1).ActiveBs, CsoTest.ModelParameters);
 CsoTest.TestBs(1).CN = CN;
