@@ -61,7 +61,7 @@ global guiHandle;
 
 guiHandle = handles;
 
-CsoTest = CsoTestSet();
+CsoTest = CsoTestSet(4);
 
 if exist('data', 'dir') == 0
     mkdir('data');

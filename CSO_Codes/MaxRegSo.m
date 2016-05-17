@@ -69,26 +69,42 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     BaseStation.InactiveBs = tempBs;
     
     [regPoints]= UT_LatticeBased('hexUni' , modelParam);
+    regPoints = CenterBs(regPoints);
+    activeCenter = CenterBs(BaseStation.InactiveBs);
+    
+    rotPoints = regPoints;
+    minAvgDist = inf;
+    
+    for k = 0:100
+        rotPoints = RotateBs(regPoints,k*2*pi/100);
+        DD = pdist2(activeCenter, rotPoints);
+        minDist = min(DD);
+        avgDist = mean(minDist);
+        if avgDist < minAvgDist
+            regPoints = rotPoints;
+            minAvgDist = avgDist;
+        end
+    end
     
     numOn = length(regPoints);
  
     % Calculate the base station distance to the regular points
     index = zeros(1,numOn);
     for k = 1:numOn
-        DD = pdist2(BaseStation.InactiveBs, regPoints(k,:));
+        DD = pdist2(activeCenter, regPoints(k,:));
         [~, minindex] = min(DD);
         index(k) = minindex;
     end
 %     DD = pdist2(BaseStation.InactiveBs, regPoints);
 %     [onPoints, index] = min(DD);
     
-    figure(2)
-    plot(regPoints(:,1),regPoints(:,2),'+b',BaseStation.InactiveBs(:,1),BaseStation.InactiveBs(:,2),'+r');
-    hold on;
-    [vxp,vyp] = voronoi(regPoints(:,1),regPoints(:,2));
-    plot(vxp,vyp,'r-','linewidth',2)
-    axis([-500 500 -500 500]);
-    hold off;
+%     figure(2)
+%     plot(regPoints(:,1),regPoints(:,2),'+b',BaseStation.InactiveBs(:,1),BaseStation.InactiveBs(:,2),'+r');
+%     hold on;
+%     [vxp,vyp] = voronoi(regPoints(:,1),regPoints(:,2));
+%     plot(vxp,vyp,'r-','linewidth',2)
+%     axis([-500 500 -500 500]);
+%     hold off;
     
     BaseStation.ActiveBs = [BaseStation.ActiveBs ; BaseStation.InactiveBs(index,:)];
     BaseStation.InactiveBs(index,:) = [];
@@ -98,3 +114,22 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     
 end
 
+function [BsOut] = CenterBs(BsIn)
+    minx = min(BsIn(:,1));
+    maxx = max(BsIn(:,1));
+    miny = min(BsIn(:,2));
+    maxy = max(BsIn(:,2));
+
+    centerx = (minx + maxx) / 2;
+    centery = (miny + maxy) / 2;
+    
+    BsIn(:,1) = BsIn(:,1) - centerx;
+    BsIn(:,2) = BsIn(:,2) - centery;
+    
+    BsOut = BsIn;
+end
+
+function [BsOut] = RotateBs(BsIn, rot)
+    rotMat = [cos(rot) -sin(rot) ; sin(rot) cos(rot)];
+    BsOut = BsIn * rotMat;
+end

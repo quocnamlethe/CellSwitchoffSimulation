@@ -1,7 +1,7 @@
 ModelParameters = ModelParaSet();
 ModelParameters.lambda = 100e-6;          
-ModelParameters.alpha_norm = 0;
-CsoTest = CsoTestSet();
+ModelParameters.alpha_norm = 1;
+CsoTest = CsoTestSet(4);
 CsoTest.ModelParameters = ModelParameters;
 
 [Bs_Locations]= UT_LatticeBased('hexUni' , ModelParameters);
@@ -22,7 +22,7 @@ for k = 1:4
     CsoTest.TestBs(k).CD = CD;
 end
 
-CsoTest.TestBs(1) = MaxRegSo(CsoTest.TestBs(1),2/3,ModelParameters);
+CsoTest.TestBs(1) = MaxRegSo(CsoTest.TestBs(1),1/3,ModelParameters);
 
 for k = 1:4
     [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);

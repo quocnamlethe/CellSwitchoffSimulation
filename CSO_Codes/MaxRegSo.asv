@@ -35,40 +35,47 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     ModelParameters.alpha_norm = 0;
     modelParam = ModelParameters;
     
-    [regPoints]= UT_LatticeBased('hexUni' , modelParam);
+    Win = modelParam.win;
     
-%     Win = modelParam.win;
-%     
-%     minx = min(rx); 
-%     maxx = max(rx);
-%     miny = min(ry); 
-%     maxy = max(ry);
-%     rangex = maxx - minx;
-%     rangey = maxy - miny;
-%     stepx = floor(rangex/floor(sqrt(activePoints)));
-%     stepy = floor(rangey/floor(sqrt(activePoints)));
-%     
-%     [X,Y] = meshgrid(minx:stepx:maxx, miny:stepy:maxy);
-%     
-%     colx = size(X,2);
-%     rowx = size(X,1);
-%     
-%     translation = repmat([0; stepx/2],[floor(rowx/2),colx]);
-%     translation = padarray(translation,[rowx-size(translation,1)],0,'post');
-%     X = X + translation;
-%     
+    minx = min(rx); 
+    maxx = max(rx);
+    miny = min(ry); 
+    maxy = max(ry);
+    rangex = maxx - minx;
+    rangey = maxy - miny;
+    stepx = floor(rangex/floor(sqrt(activePoints)));
+    stepy = floor(rangey/floor(sqrt(activePoints)));
+    
+    [X,Y] = meshgrid(minx:stepx:maxx, miny:stepy:maxy);
+    
+    colx = size(X,2);
+    rowx = size(X,1);
+    
+    translation = repmat([0; stepx/2],[floor(rowx/2),colx]);
+    translation = padarray(translation,[rowx-size(translation,1)],0,'post');
+    X = X + translation;
+    
+    regPoints = [reshape(X,[],1),reshape(Y,[],1)];
+    regPoints(:,1) = regPoints(:,1) - (max(regPoints(:,1)) + min(regPoints(:,1)))/2;
+    regPoints(:,2) = regPoints(:,2) - (max(regPoints(:,2)) + min(regPoints(:,2)))/2;
+    
+    [rx, ry ] = Polygon_rx_ry(Win);
+    
+    in = inpolygon(regPoints(:,1),regPoints(:,2),rx,ry);
+    regPoints = regPoints(in,:);
+    
     tempBs = BaseStation.ActiveBs;
     BaseStation.ActiveBs = BaseStation.InactiveBs;
     BaseStation.InactiveBs = tempBs;
     
-%     regPoints = [reshape(X,[],1),reshape(Y,[],1)];
-%     regPoints(:,1) = regPoints(:,1) - (max(regPoints(:,1)) + min(regPoints(:,1)))/2;
-%     regPoints(:,2) = regPoints(:,2) - (max(regPoints(:,2)) + min(regPoints(:,2)))/2;
-%     
-%     [rx, ry ] = Polygon_rx_ry(Win);
-%     
-%     in = inpolygon(regPoints(:,1),regPoints(:,2),rx,ry);
-%     regPoints = regPoints(in,:);
+    [regPoints]= UT_LatticeBased('hexUni' , modelParam);
+    CenterBs(regPoints);
+    
+    rotPoints = regPoints;
+    minAvgDist = inf;
+    
+    for k = 1:100
+    RotateBs(regPoints,k*2*pi/100
     
     numOn = length(regPoints);
  
@@ -85,8 +92,10 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     figure(2)
     plot(regPoints(:,1),regPoints(:,2),'+b',BaseStation.InactiveBs(:,1),BaseStation.InactiveBs(:,2),'+r');
     hold on;
-    [vxp,vyp] = voronoi(xp,yp);
-    plot(axesHandle,xp,yp,'r+',vxp,vyp,'r-','linewidth',2)
+    [vxp,vyp] = voronoi(regPoints(:,1),regPoints(:,2));
+    plot(vxp,vyp,'r-','linewidth',2)
+    axis([-500 500 -500 500]);
+    hold off;
     
     BaseStation.ActiveBs = [BaseStation.ActiveBs ; BaseStation.InactiveBs(index,:)];
     BaseStation.InactiveBs(index,:) = [];
@@ -96,3 +105,22 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     
 end
 
+function [BsOut] = CenterBs(BsIn)
+    minx = min(BsIn(:,1));
+    maxx = max(BsIn(:,1));
+    miny = min(BsIn(:,2));
+    maxy = max(BsIn(:,2));
+
+    centerx = (minx + maxx) / 2;
+    centery = (miny + maxy) / 2;
+    
+    BsIn(:,1) = BsIn(:,1) - centerx;
+    BsIn(:,2) = BsIn(:,2) - centery;
+    
+    BsOut = BsIn;
+end
+
+function [BsOut] = RotateBs(BsIn, rot)
+    rotMat = [cos(rot) -sin(rot) ; sin(rot) cos(rot)];
+    BsOut = BsIn * rotMat;
+end
