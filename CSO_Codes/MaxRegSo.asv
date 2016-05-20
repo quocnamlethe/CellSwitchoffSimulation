@@ -1,7 +1,7 @@
 function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Header comments
-% MinVoronoiSO - The minimum voronoi area cell switch off algorithm
+% MinVoronoiSO - The maximum regularity cell switch off algorithm
 % 
-% Syntax: [BaseStationSO] = MinVoronoiSO(BaseStation,percentSO)
+% Syntax: [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam)
 %
 % Outputs:
 %   BaseStationSO - a structure containing the model description 
@@ -11,92 +11,83 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
 %   BaseStation - a structure containing the model description 
 %   representing a set of base stations and their CoVs
 %   percentSO - the percentage of the base stations to switch off
+%   modelParam - the parameters for the model of the area (Requires window
+%   size)
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
 %
 % Additional Info:
-%   Minimum Voronoi Area Switch Off algorithm:
-%       1) Calculate the base station voronoi areas
-%       2) Identify the base station with the minimum voronoi area
-%       3) Remove the base station with the minimum voronoi area
-
-    % Calculate the number of base stations to switch off
-    nPoints = length(BaseStation.ActiveBs);
-    numSO = round(nPoints * percentSO);
+%   Maximum Regularity Switch Off algorithm:
+%       1) Calculate the new base station density based on the cell switch
+%       off percentage
+%       2) Calculate the theoretical locations of base stations that would
+%       maximize regularity (hexigonal lattice)
+%       3) Keep the closest base station to each of the theoretical
+%       locations. This is done sequentially and the base stations with the
+%       minimum distances from the theoretical locations are kept first
     
-    activePoints = nPoints - numSO;
-    rx = BaseStation.ActiveBs(:,1);
-    ry = BaseStation.ActiveBs(:,2);
-    
+    % Calculate the new base station density based on the cell switch off
+    % percentage
     ModelParameters = ModelParaSet();
     ModelParameters.lambda = modelParam.lambda * (1 - percentSO);          
     ModelParameters.alpha_norm = 0;
     modelParam = ModelParameters;
     
-    Win = modelParam.win;
-    
-    minx = min(rx); 
-    maxx = max(rx);
-    miny = min(ry); 
-    maxy = max(ry);
-    rangex = maxx - minx;
-    rangey = maxy - miny;
-    stepx = floor(rangex/floor(sqrt(activePoints)));
-    stepy = floor(rangey/floor(sqrt(activePoints)));
-    
-    [X,Y] = meshgrid(minx:stepx:maxx, miny:stepy:maxy);
-    
-    colx = size(X,2);
-    rowx = size(X,1);
-    
-    translation = repmat([0; stepx/2],[floor(rowx/2),colx]);
-    translation = padarray(translation,[rowx-size(translation,1)],0,'post');
-    X = X + translation;
-    
-    regPoints = [reshape(X,[],1),reshape(Y,[],1)];
-    regPoints(:,1) = regPoints(:,1) - (max(regPoints(:,1)) + min(regPoints(:,1)))/2;
-    regPoints(:,2) = regPoints(:,2) - (max(regPoints(:,2)) + min(regPoints(:,2)))/2;
-    
-    [rx, ry ] = Polygon_rx_ry(Win);
-    
-    in = inpolygon(regPoints(:,1),regPoints(:,2),rx,ry);
-    regPoints = regPoints(in,:);
-    
+    % Assume the Active Base stations are off
     tempBs = BaseStation.ActiveBs;
     BaseStation.ActiveBs = BaseStation.InactiveBs;
     BaseStation.InactiveBs = tempBs;
     
+    % Calculate the theoretical locations for base stations that would
+    % maximize regularity and center both the theoretical base stations and
+    % the inputted base stations
     [regPoints]= UT_LatticeBased('hexUni' , modelParam);
-    CenterBs(regPoints);
+    regPoints = CenterBs(regPoints);
+    activeCenter = CenterBs(BaseStation.InactiveBs);
     
-    rotPoints = regPoints;
+    % Initialize minimum average distance to infinity to ensure first loop
+    % will overwrite the minimum average distance
     minAvgDist = inf;
     
-    for k = 1:100
-    RotateBs(regPoints,k*2*pi/100
+    % Rotate the theoretical base stations and determine which rotation
+    % provides the average minimum distances to the inputted base stations.
+    % The theoretical base stations are rotated by 1 degree each time loop
+    for k = 0:359
+        % Rotate the theoretical base station by 1 degree per loop
+        rotPoints = RotateBs(regPoints,k*2*pi/360);
+        
+        % Calculate the minimum distances to each theoretical base station
+        % and the average minimum distances to each theoretical base
+        % station
+        DD = pdist2(activeCenter, rotPoints);
+        minDist = min(DD);
+        avgDist = mean(minDist);
+        
+        % Identify the rotation orientation with the minimum average
+        % minimum distance to each theoretical base station
+        if avgDist < minAvgDist
+            regPoints = rotPoints;
+            minAvgDist = avgDist;
+        end
+    end
     
+    % Calculate the number of base stations to keep on
     numOn = length(regPoints);
  
-    % Calculate the base station distance to the regular points
+    % Calculate the base station distance to the regular points and keep on
+    % the closest base stations to the theoretical base stations
+    % sequentially.
     index = zeros(1,numOn);
     for k = 1:numOn
-        DD = pdist2(BaseStation.InactiveBs, regPoints(k,:));
+        DD = pdist2(activeCenter, regPoints(k,:));
         [~, minindex] = min(DD);
         index(k) = minindex;
     end
-%     DD = pdist2(BaseStation.InactiveBs, regPoints);
-%     [onPoints, index] = min(DD);
     
-    figure(2)
-    plot(regPoints(:,1),regPoints(:,2),'+b',BaseStation.InactiveBs(:,1),BaseStation.InactiveBs(:,2),'+r');
-    hold on;
-    [vxp,vyp] = voronoi(regPoints(:,1),regPoints(:,2));
-    plot(vxp,vyp,'r-','linewidth',2)
-    axis([-500 500 -500 500]);
-    hold off;
-    
+    % Keep on the base station with the minimum distance to the theoretical
+    % base stations
     BaseStation.ActiveBs = [BaseStation.ActiveBs ; BaseStation.InactiveBs(index,:)];
     BaseStation.InactiveBs(index,:) = [];
 
@@ -105,6 +96,8 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     
 end
 
+% This function centers the inputted base stations. The base stations are
+% in the format of [X1,Y1;X2,Y2;...]
 function [BsOut] = CenterBs(BsIn)
     minx = min(BsIn(:,1));
     maxx = max(BsIn(:,1));
@@ -120,6 +113,8 @@ function [BsOut] = CenterBs(BsIn)
     BsOut = BsIn;
 end
 
+% This function rotates the inputted base stations by . The base stations are
+% in the format of [X1,Y1;X2,Y2;...]
 function [BsOut] = RotateBs(BsIn, rot)
     rotMat = [cos(rot) -sin(rot) ; sin(rot) cos(rot)];
     BsOut = BsIn * rotMat;

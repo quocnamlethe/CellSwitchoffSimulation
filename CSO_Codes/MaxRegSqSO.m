@@ -1,7 +1,7 @@
-function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Header comments
-% MaxRegSo - The maximum regularity cell switch off algorithm
+function [BaseStationSO] = MaxRegSqSO(BaseStation,percentSO,modelParam)
+% MaxRegSqSO - The maximum regularity cell switch off algorithm
 % 
-% Syntax: [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam)
+% Syntax: [MaxRegSqSO] = MaxRegSo(BaseStation,percentSO,modelParam)
 %
 % Outputs:
 %   BaseStationSO - a structure containing the model description 
@@ -31,6 +31,7 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     % Calculate the new base station density based on the cell switch off
     % percentage
     ModelParameters = ModelParaSet();
+    ModelParameters.win = modelParam.win;
     ModelParameters.lambda = modelParam.lambda * (1 - percentSO);          
     ModelParameters.alpha_norm = 0;
     modelParam = ModelParameters;
@@ -43,7 +44,7 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     % Calculate the theoretical locations for base stations that would
     % maximize regularity and center both the theoretical base stations and
     % the inputted base stations
-    [regPoints]= UT_LatticeBased('hexUni' , modelParam);
+    [regPoints]= UT_LatticeBased('sqUni' , modelParam);
     regPoints = CenterBs(regPoints);
     activeCenter = CenterBs(BaseStation.InactiveBs);
     
@@ -72,6 +73,11 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
             minAvgDist = avgDist;
         end
     end
+    
+    % Cut off any points that are ouside of the window
+    [rx, ry] = Polygon_rx_ry(modelParam.win);
+    in = inpolygon(regPoints(:,1),regPoints(:,2),rx,ry);
+    regPoints = regPoints(in,:);
     
     % Calculate the number of base stations to keep on
     numOn = length(regPoints);

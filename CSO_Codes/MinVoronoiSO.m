@@ -11,6 +11,8 @@ function [BaseStationSO] = MinVoronoiSO(BaseStation,percentSO,modelParam)
 %   BaseStation - a structure containing the model description 
 %   representing a set of base stations and their CoVs
 %   percentSO - the percentage of the base stations to switch off
+%   modelParam - the parameters for the model of the area (Requires window
+%   size)
 %
 % Other m-files required: none
 % Subfunctions: none
@@ -30,8 +32,6 @@ function [BaseStationSO] = MinVoronoiSO(BaseStation,percentSO,modelParam)
     for k = 1:numSO
         Xu = BaseStation.ActiveBs;
         Win = modelParam.win;
-        eta = sqrt(2/(modelParam.lambda*sqrt(3)));
-        nPoints = length(BaseStation.ActiveBs);
         [rx, ry ] = Polygon_rx_ry(Win);
         Ep = 1.5;
         EA = 1;

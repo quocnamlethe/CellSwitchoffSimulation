@@ -1,0 +1,319 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>MaxRegSo</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-05-19"><meta name="DC.source" content="MaxRegSo.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">function</span> [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) <span class="comment">% TODO Header comments</span>
+<span class="comment">% MaxRegSo - The maximum regularity cell switch off algorithm</span>
+<span class="comment">%</span>
+<span class="comment">% Syntax: [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam)</span>
+<span class="comment">%</span>
+<span class="comment">% Outputs:</span>
+<span class="comment">%   BaseStationSO - a structure containing the model description</span>
+<span class="comment">%   representing a set of base stations and their CoVs</span>
+<span class="comment">%</span>
+<span class="comment">% Inputs:</span>
+<span class="comment">%   BaseStation - a structure containing the model description</span>
+<span class="comment">%   representing a set of base stations and their CoVs</span>
+<span class="comment">%   percentSO - the percentage of the base stations to switch off</span>
+<span class="comment">%   modelParam - the parameters for the model of the area (Requires window</span>
+<span class="comment">%   size)</span>
+<span class="comment">%</span>
+<span class="comment">% Other m-files required: none</span>
+<span class="comment">% Subfunctions: none</span>
+<span class="comment">% MAT-files required: none</span>
+<span class="comment">%</span>
+<span class="comment">% Additional Info:</span>
+<span class="comment">%   Maximum Regularity Switch Off algorithm:</span>
+<span class="comment">%       1) Calculate the new base station density based on the cell switch</span>
+<span class="comment">%       off percentage</span>
+<span class="comment">%       2) Calculate the theoretical locations of base stations that would</span>
+<span class="comment">%       maximize regularity (hexigonal lattice)</span>
+<span class="comment">%       3) Keep the closest base station to each of the theoretical</span>
+<span class="comment">%       locations. This is done sequentially and the base stations with the</span>
+<span class="comment">%       minimum distances from the theoretical locations are kept first</span>
+
+    <span class="comment">% Calculate the new base station density based on the cell switch off</span>
+    <span class="comment">% percentage</span>
+    ModelParameters = ModelParaSet();
+    ModelParameters.lambda = modelParam.lambda * (1 - percentSO);
+    ModelParameters.alpha_norm = 0;
+    modelParam = ModelParameters;
+
+    <span class="comment">% Assume the Active Base stations are off</span>
+    tempBs = BaseStation.ActiveBs;
+    BaseStation.ActiveBs = BaseStation.InactiveBs;
+    BaseStation.InactiveBs = tempBs;
+
+    <span class="comment">% Calculate the theoretical locations for base stations that would</span>
+    <span class="comment">% maximize regularity and center both the theoretical base stations and</span>
+    <span class="comment">% the inputted base stations</span>
+    [regPoints]= UT_LatticeBased(<span class="string">'hexUni'</span> , modelParam);
+    regPoints = CenterBs(regPoints);
+    activeCenter = CenterBs(BaseStation.InactiveBs);
+
+    <span class="comment">% Initialize minimum average distance to infinity to ensure first loop</span>
+    <span class="comment">% will overwrite the minimum average distance</span>
+    minAvgDist = inf;
+
+    <span class="comment">% Rotate the theoretical base stations and determine which rotation</span>
+    <span class="comment">% provides the average minimum distances to the inputted base stations.</span>
+    <span class="comment">% The theoretical base stations are rotated by 1 degree each time loop</span>
+    <span class="keyword">for</span> k = 0:359
+        <span class="comment">% Rotate the theoretical base station by 1 degree per loop</span>
+        rotPoints = RotateBs(regPoints,k*2*pi/360);
+
+        <span class="comment">% Calculate the minimum distances to each theoretical base station</span>
+        <span class="comment">% and the average minimum distances to each theoretical base</span>
+        <span class="comment">% station</span>
+        DD = pdist2(activeCenter, rotPoints);
+        minDist = min(DD);
+        avgDist = mean(minDist);
+
+        <span class="comment">% Identify the rotation orientation with the minimum average</span>
+        <span class="comment">% minimum distance to each theoretical base station</span>
+        <span class="keyword">if</span> avgDist &lt; minAvgDist
+            regPoints = rotPoints;
+            minAvgDist = avgDist;
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    <span class="comment">% Calculate the number of base stations to keep on</span>
+    numOn = length(regPoints);
+
+    <span class="comment">% Calculate the base station distance to the regular points and keep on</span>
+    <span class="comment">% the closest base stations to the theoretical base stations</span>
+    <span class="comment">% sequentially.</span>
+    index = zeros(1,numOn);
+    <span class="keyword">for</span> k = 1:numOn
+        DD = pdist2(activeCenter, regPoints(k,:));
+        [~, minindex] = min(DD);
+        index(k) = minindex;
+    <span class="keyword">end</span>
+
+    <span class="comment">% Keep on the base station with the minimum distance to the theoretical</span>
+    <span class="comment">% base stations</span>
+    BaseStation.ActiveBs = [BaseStation.ActiveBs ; BaseStation.InactiveBs(index,:)];
+    BaseStation.InactiveBs(index,:) = [];
+
+    <span class="comment">% Output the resulting base station set</span>
+    BaseStationSO = BaseStation;
+
+<span class="keyword">end</span>
+
+<span class="comment">% This function centers the inputted base stations. The base stations are</span>
+<span class="comment">% in the format of [X1,Y1;X2,Y2;...]</span>
+<span class="keyword">function</span> [BsOut] = CenterBs(BsIn)
+    minx = min(BsIn(:,1));
+    maxx = max(BsIn(:,1));
+    miny = min(BsIn(:,2));
+    maxy = max(BsIn(:,2));
+
+    centerx = (minx + maxx) / 2;
+    centery = (miny + maxy) / 2;
+
+    BsIn(:,1) = BsIn(:,1) - centerx;
+    BsIn(:,2) = BsIn(:,2) - centery;
+
+    BsOut = BsIn;
+<span class="keyword">end</span>
+
+<span class="comment">% This function rotates the inputted base stations by rot radians. The base</span>
+<span class="comment">% stations are in the format of [X1,Y1;X2,Y2;...]</span>
+<span class="keyword">function</span> [BsOut] = RotateBs(BsIn, rot)
+    rotMat = [cos(rot) -sin(rot) ; sin(rot) cos(rot)];
+    BsOut = BsIn * rotMat;
+<span class="keyword">end</span>
+</pre><pre class="codeoutput error">Not enough input arguments.
+
+Error in MaxRegSo (line 34)
+    ModelParameters.lambda = modelParam.lambda * (1 - percentSO);          
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Header comments
+% MaxRegSo - The maximum regularity cell switch off algorithm
+% 
+% Syntax: [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam)
+%
+% Outputs:
+%   BaseStationSO - a structure containing the model description 
+%   representing a set of base stations and their CoVs
+%
+% Inputs:
+%   BaseStation - a structure containing the model description 
+%   representing a set of base stations and their CoVs
+%   percentSO - the percentage of the base stations to switch off
+%   modelParam - the parameters for the model of the area (Requires window
+%   size)
+%
+% Other m-files required: none
+% Subfunctions: none
+% MAT-files required: none
+%
+% Additional Info:
+%   Maximum Regularity Switch Off algorithm:
+%       1) Calculate the new base station density based on the cell switch
+%       off percentage
+%       2) Calculate the theoretical locations of base stations that would
+%       maximize regularity (hexigonal lattice)
+%       3) Keep the closest base station to each of the theoretical
+%       locations. This is done sequentially and the base stations with the
+%       minimum distances from the theoretical locations are kept first
+    
+    % Calculate the new base station density based on the cell switch off
+    % percentage
+    ModelParameters = ModelParaSet();
+    ModelParameters.lambda = modelParam.lambda * (1 - percentSO);          
+    ModelParameters.alpha_norm = 0;
+    modelParam = ModelParameters;
+    
+    % Assume the Active Base stations are off
+    tempBs = BaseStation.ActiveBs;
+    BaseStation.ActiveBs = BaseStation.InactiveBs;
+    BaseStation.InactiveBs = tempBs;
+    
+    % Calculate the theoretical locations for base stations that would
+    % maximize regularity and center both the theoretical base stations and
+    % the inputted base stations
+    [regPoints]= UT_LatticeBased('hexUni' , modelParam);
+    regPoints = CenterBs(regPoints);
+    activeCenter = CenterBs(BaseStation.InactiveBs);
+    
+    % Initialize minimum average distance to infinity to ensure first loop
+    % will overwrite the minimum average distance
+    minAvgDist = inf;
+    
+    % Rotate the theoretical base stations and determine which rotation
+    % provides the average minimum distances to the inputted base stations.
+    % The theoretical base stations are rotated by 1 degree each time loop
+    for k = 0:359
+        % Rotate the theoretical base station by 1 degree per loop
+        rotPoints = RotateBs(regPoints,k*2*pi/360);
+        
+        % Calculate the minimum distances to each theoretical base station
+        % and the average minimum distances to each theoretical base
+        % station
+        DD = pdist2(activeCenter, rotPoints);
+        minDist = min(DD);
+        avgDist = mean(minDist);
+        
+        % Identify the rotation orientation with the minimum average
+        % minimum distance to each theoretical base station
+        if avgDist < minAvgDist
+            regPoints = rotPoints;
+            minAvgDist = avgDist;
+        end
+    end
+    
+    % Calculate the number of base stations to keep on
+    numOn = length(regPoints);
+ 
+    % Calculate the base station distance to the regular points and keep on
+    % the closest base stations to the theoretical base stations
+    % sequentially.
+    index = zeros(1,numOn);
+    for k = 1:numOn
+        DD = pdist2(activeCenter, regPoints(k,:));
+        [~, minindex] = min(DD);
+        index(k) = minindex;
+    end
+    
+    % Keep on the base station with the minimum distance to the theoretical
+    % base stations
+    BaseStation.ActiveBs = [BaseStation.ActiveBs ; BaseStation.InactiveBs(index,:)];
+    BaseStation.InactiveBs(index,:) = [];
+
+    % Output the resulting base station set
+    BaseStationSO = BaseStation;
+    
+end
+
+% This function centers the inputted base stations. The base stations are
+% in the format of [X1,Y1;X2,Y2;...]
+function [BsOut] = CenterBs(BsIn)
+    minx = min(BsIn(:,1));
+    maxx = max(BsIn(:,1));
+    miny = min(BsIn(:,2));
+    maxy = max(BsIn(:,2));
+
+    centerx = (minx + maxx) / 2;
+    centery = (miny + maxy) / 2;
+    
+    BsIn(:,1) = BsIn(:,1) - centerx;
+    BsIn(:,2) = BsIn(:,2) - centery;
+    
+    BsOut = BsIn;
+end
+
+% This function rotates the inputted base stations by rot radians. The base
+% stations are in the format of [X1,Y1;X2,Y2;...]
+function [BsOut] = RotateBs(BsIn, rot)
+    rotMat = [cos(rot) -sin(rot) ; sin(rot) cos(rot)];
+    BsOut = BsIn * rotMat;
+end
+
+##### SOURCE END #####
+--></body></html>
