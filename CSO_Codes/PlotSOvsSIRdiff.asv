@@ -1,7 +1,7 @@
 function [] = PlotSOvsSIRdiff()
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
-    load('data/Test_SOvsSIRdiffData3.mat', 'CsoTest');
+    load('data/Test_SOvsSIRdiffData2.mat', 'CsoTest');
     
     testNum = 5;
     colours = ['k' 'm' 'g' 'r' 'b' 'c' 'y'];
@@ -33,9 +33,7 @@ function [] = PlotSOvsSIRdiff()
         end
 
         %axis([-50 50 -50 50]);
-        xlabel('Switch Off Percentage');
-        ylabel('SIR difference (dB)');
-        title(strcat('Input CD: ', CsoTest.TestBs(1).TestPlot(j).Tag));
+        title(CsoTest.TestBs(1).TestPlot(j).Tag);
         hold off;
     end
     

@@ -1,9 +1,15 @@
 % Wait bar
 hwait = waitbar(0,'Calculating');
+tic;
 
 % Initialize the model parameters
 ModelParameters = ModelParaSet();
-ModelParameters.lambda = 100e-6;          
+ModelParameters.lambda = 100e-6;
+
+% Initialize channel parameters
+ChannelParamters = ChannelSetup(); 
+ChannelParamters.AssociationType = 'StrongestBS';
+ChannelParamters.SIRMericType = 'SIR';
 
 % Initialize the test set
 testNum = 5;
@@ -22,17 +28,27 @@ CovAvg = zeros(1,5);
  Shadow = 6; % [dB]  % Log-distance or Log-normal shadowing
  
  SIRMericType='MedianSIR';
+ 
+for k = 1:testNum
+    CsoTest.TestBs(k).TestPlot = repmat([TestPlotSet('initial')],1,5);
+end
+
+plotData = zeros(100,2);
 
 warning off;
 for l = 1:5
     % Test for incrementing perturbation values
     ModelParameters.alpha_norm = 0.25 * l - 0.25;
-    CsoTest.ModelParameters = ModelParameters;
+    %CsoTest.ModelParameters = ModelParameters;
     
     % Initialize the testPlot structure for each test method
     for k = 1:testNum
         testPlot = CsoTest.TestBs(k).TestPlot;
-        testPlot = [testPlot, TestPlotSet(num2str(ModelParameters.alpha_norm))];
+        testPlot(k) = TestPlotSet(num2str(ModelParameters.alpha_norm));
+        testPlot(k).CnData = plotData;
+        testPlot(k).CvData = plotData;
+        testPlot(k).CdData = plotData;
+        testPlot(k).SirData = plotData;
         CsoTest.TestBs(k).TestPlot = testPlot;
     end
     
@@ -53,6 +69,11 @@ for l = 1:5
         
         % Calculate initial SIR value
         [InitialSIR] = SIR_RayleighCh2(InitialBs,User_Locations,Exponent,Shadow,SIRMericType);
+        
+        % 95th percentile
+        InitialSIR = prctile(InitialSIR,95);
+        % 50th percentile
+        % InitialSIR = prctile(InitialSIR,50);
         
         % Get current CD value
         Cov(j) = CD;
@@ -83,10 +104,14 @@ for l = 1:5
             % Calculate the CoVs and input them into the test plot
             % structures
             for k = 1:testNum                
-                [SIR_dB] = SIR_RayleighCh2(CsoTest.TestBs(k).ActiveBs,User_Locations,Exponent,Shadow,SIRMericType);
+                [SIR_dB] = SIR_RayleighCh3(CsoTest.TestBs(k).ActiveBs,User_Locations,ChannelParamters);
                 
+                % 95th percentile
+                SIR_dB = prctile(SIR_dB,95);
+                % 50th percentile
+                % SIR_dB = prctile(SIR_dB,50);
                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
-                SirData = [SirData ; percentSO, SIR_dB - InitialSIR];
+                SirData(((j-1)*10 + m + 1),:) = [percentSO, (SIR_dB - InitialSIR)];
                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
             end
         end
@@ -110,5 +135,7 @@ for l = 1:5
 end
 warning on;
 
-save('data/Test_SOvsSIRdiffData.mat', 'CsoTest');
+save('data/Test_SOvsSIRdiffData3.mat', 'CsoTest');
+runTime = toc;
+fprintf('Runtime: %f\n',runTime);
 close(hwait);
