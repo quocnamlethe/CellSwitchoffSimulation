@@ -39,7 +39,7 @@ function [] = PlotSOvsSIRdiff()
         hold off;
     end
     
-    legend(h,'Min Dist','2nd Nearest','Max Num Nearest','Min Voronoi','Max Regularity');
+    legend(h,'Min Dist','2nd Nearest','Random SO','Genie Aided','Max Regularity');
     
 end
 

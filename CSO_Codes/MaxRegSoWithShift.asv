@@ -1,7 +1,7 @@
-function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Header comments
-% MinVoronoiSO - The maximum regularity cell switch off algorithm
+function [BaseStationSO] = MaxRegSoWithShift(BaseStation,percentSO,modelParam) % TODO Header comments
+% MaxRegSoWithShift - The maximum regularity cell switch off algorithm
 % 
-% Syntax: [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam)
+% Syntax: [BaseStationSO] = MaxRegSoWithShift(BaseStation,percentSO,modelParam)
 %
 % Outputs:
 %   BaseStationSO - a structure containing the model description 
@@ -24,16 +24,20 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
 %       off percentage
 %       2) Calculate the theoretical locations of base stations that would
 %       maximize regularity (hexigonal lattice)
-%       3) Keep the closest base station to each of the theoretical
-%       locations. This is done sequentially and the base stations with the
-%       minimum distances from the theoretical locations are kept first
+%       3)  a) Shift the theoretical locations left-right and up-down
+%           b) Rotate the shifted theorectical locations
+%           c) Keep the closest base station to each of the theoretical
+%              locations. This is done sequentially and the base stations with the
+%              minimum distances from the theoretical locations are kept first
     
     % Calculate the new base station density based on the cell switch off
     % percentage
     ModelParameters = ModelParaSet();
     ModelParameters.lambda = modelParam.lambda * (1 - percentSO);          
     ModelParameters.alpha_norm = 0;
-    modelParam = ModelParameters;
+    ModelParameters.win = modelParam.win * 2;
+
+    [rx, ry] = Polygon_rx_ry(modelParam.win);
     
     % Assume the Active Base stations are off
     tempBs = BaseStation.ActiveBs;
@@ -43,34 +47,55 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     % Calculate the theoretical locations for base stations that would
     % maximize regularity and center both the theoretical base stations and
     % the inputted base stations
-    [regPoints]= UT_LatticeBased('hexUni' , modelParam);
+    [regPoints]= UT_LatticeBased('hexUni' , ModelParameters);
     regPoints = CenterBs(regPoints);
+    centeredPoints = regPoints;
     activeCenter = CenterBs(BaseStation.InactiveBs);
     
     % Initialize minimum average distance to infinity to ensure first loop
     % will overwrite the minimum average distance
     minAvgDist = inf;
     
+    % Calculate the spacing between the regular points
+    regDist = min(min(pdist2(centeredPoints,centeredPoints)));
+    
     % Rotate the theoretical base stations and determine which rotation
     % provides the average minimum distances to the inputted base stations.
     % The theoretical base stations are rotated by 1 degree each time loop
     for k = 0:359
         % Rotate the theoretical base station by 1 degree per loop
-        rotPoints = RotateBs(regPoints,k*2*pi/360);
+        rotPoints = RotateBs(centeredPoints,k*2*pi/360);
         
-        % Calculate the minimum distances to each theoretical base station
-        % and the average minimum distances to each theoretical base
-        % station
+        % Calculate best shift vector
         DD = pdist2(activeCenter, rotPoints);
-        minDist = min(DD);
-        avgDist = mean(minDist);
+        [minDist,minIndex] = min(DD);
+        shiftVector = activeCenter(minIndex,:) - rotPoints;
+        shiftVectorLength = size(shiftVector,1);
+        shiftVector = repmat(mean(shiftVector),[shiftVectorLength,1]);
+        rotPoints = rotPoints + shiftVector;
         
-        % Identify the rotation orientation with the minimum average
-        % minimum distance to each theoretical base station
-        if avgDist < minAvgDist
-            regPoints = rotPoints;
-            minAvgDist = avgDist;
-        end
+%         for long = 0:10
+%             for lat = 0:10
+%                 rotPoints(:,1) = rotPoints(:,1) + regDist*lat/10;
+%                 rotPoints(:,2) = rotPoints(:,2) + regDist*long/10;
+                inp = inpolygon(rotPoints(:,1),rotPoints(:,2),rx,ry);
+                rotPoints = rotPoints(inp,:);
+                
+                % Calculate the minimum distances to each theoretical base station
+                % and the average minimum distances to each theoretical base
+                % station
+                DD = pdist2(activeCenter, rotPoints);
+                minDist = min(DD);
+                avgDist = mean(minDist);
+
+                % Identify the rotation orientation with the minimum average
+                % minimum distance to each theoretical base station
+                if avgDist < minAvgDist
+                    regPoints = rotPoints;
+                    minAvgDist = avgDist;
+                end
+%             end
+%         end
     end
     
     % Calculate the number of base stations to keep on
@@ -99,13 +124,19 @@ end
 % This function centers the inputted base stations. The base stations are
 % in the format of [X1,Y1;X2,Y2;...]
 function [BsOut] = CenterBs(BsIn)
-    minx = min(BsIn(:,1));
-    maxx = max(BsIn(:,1));
-    miny = min(BsIn(:,2));
-    maxy = max(BsIn(:,2));
+%     minx = min(BsIn(:,1));
+%     maxx = max(BsIn(:,1));
+%     miny = min(BsIn(:,2));
+%     maxy = max(BsIn(:,2));
+% 
+%     centerx = (minx + maxx) / 2;
+%     centery = (miny + maxy) / 2;
 
-    centerx = (minx + maxx) / 2;
-    centery = (miny + maxy) / 2;
+    DD = pdist2(BsIn,[0,0]);
+    [~,minIndex] = min(DD);
+    
+    centerx = DD(minIndex,1);
+    centery = DD(minIndex,2);
     
     BsIn(:,1) = BsIn(:,1) - centerx;
     BsIn(:,2) = BsIn(:,2) - centery;
@@ -113,8 +144,10 @@ function [BsOut] = CenterBs(BsIn)
     BsOut = BsIn;
 end
 
-% This function rotates the inputted base stations by . The base stations are
-% in the format of [X1,Y1;X2,Y2;...]
+func
+
+% This function rotates the inputted base stations by rot radians. The base
+% stations are in the format of [X1,Y1;X2,Y2;...]
 function [BsOut] = RotateBs(BsIn, rot)
     rotMat = [cos(rot) -sin(rot) ; sin(rot) cos(rot)];
     BsOut = BsIn * rotMat;

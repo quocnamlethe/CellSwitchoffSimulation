@@ -59,7 +59,7 @@ for l = 1:5
                 CsoTest.TestBs(2) = AverageNearestSO(CsoTest.TestBs(2),percentSO,2);
                 CsoTest.TestBs(3) = NumNearestSO(CsoTest.TestBs(3),percentSO);
                 CsoTest.TestBs(4) = MinVoronoiSO(CsoTest.TestBs(4),percentSO,ModelParameters);
-                CsoTest.TestBs(5) = MaxRegSo(CsoTest.TestBs(5),percentSO,ModelParameters);
+                CsoTest.TestBs(5) = MaxRegSoWithS(CsoTest.TestBs(5),percentSO,ModelParameters);
             end
                 
             % Calculate the CoVs and input them into the test plot
@@ -98,7 +98,7 @@ for l = 1:5
             avgCdData = mean(CdData(CdIndex,2));
             CdTemp(m+1,:) = [0.1*m, avgCdData];
         end
-        CsoTest.TestBs(k).TestPlot(j).CdData = CdTemp;
+        CsoTest.TestBs(k).TestPlot(l).CdData = CdTemp;
     end
 end
 warning on;

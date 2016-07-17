@@ -37,7 +37,7 @@ function [] = PlotSOvsCovOut()
         hold off;
     end
     
-    legend(h,'Min Dist','2nd Nearest','Max Num Nearest','Min Voronoi','Max Regularity');
+    legend(h,'Greedy Deletion','Max Regularity','Random SO','Genie Aided SO','Neighborhood');
     
 end
 

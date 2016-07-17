@@ -55,11 +55,13 @@ for l = 1:5
 
             % Run SO algorithms on the base station locations
             if percentSO > 0
-                CsoTest.TestBs(1) = AverageNearestSO(CsoTest.TestBs(1),percentSO,1);
-                CsoTest.TestBs(2) = AverageNearestSO(CsoTest.TestBs(2),percentSO,2);
-                CsoTest.TestBs(3) = NumNearestSO(CsoTest.TestBs(3),percentSO);
-                CsoTest.TestBs(4) = MinVoronoiSO(CsoTest.TestBs(4),percentSO,ModelParameters);
-                CsoTest.TestBs(5) = MaxRegSo(CsoTest.TestBs(5),percentSO,ModelParameters);
+                fprintf('SO: %f\n',percentSO);
+                fprintf('Pert: %f\n\n',ModelParameters.alpha_norm);
+                CsoTest.TestBs(1) = AverageNearestSO(CsoTest.TestBs(1),percentSO,2);
+                CsoTest.TestBs(2) = MaxRegSoWithShift(CsoTest.TestBs(2),percentSO,ModelParameters);
+                CsoTest.TestBs(3) = RandomSO(CsoTest.TestBs(3),percentSO);
+                CsoTest.TestBs(4) = GenieAidedSO(CsoTest.TestBs(4),percentSO,ModelParameters);
+                CsoTest.TestBs(5) = NeighborhoodSO(CsoTest.TestBs(5),percentSO);
             end
                 
             % Calculate the CoVs and input them into the test plot

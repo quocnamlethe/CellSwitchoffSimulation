@@ -1,7 +1,7 @@
-function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Header comments
-% MaxRegSo - The maximum regularity cell switch off algorithm
+function [BaseStationSO] = GenieAidedSO(BaseStation,percentSO,modelParam) % TODO Header comments
+% GenieAidedSO - The genie aided cell switch off algorithm
 % 
-% Syntax: [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam)
+% Syntax: [BaseStationSO] = GenieAidedSO(BaseStation,percentSO,modelParam)
 %
 % Outputs:
 %   BaseStationSO - a structure containing the model description 
@@ -19,14 +19,13 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
 % MAT-files required: none
 %
 % Additional Info:
-%   Maximum Regularity Switch Off algorithm:
+%   Genie Aided Switch Off algorithm:
 %       1) Calculate the new base station density based on the cell switch
 %       off percentage
 %       2) Calculate the theoretical locations of base stations that would
 %       maximize regularity (hexigonal lattice)
-%       3) Keep the closest base station to each of the theoretical
-%       locations. This is done sequentially and the base stations with the
-%       minimum distances from the theoretical locations are kept first
+%       3) Replace the real locations with the theoretical locations of
+%       base stations (Genie moved the base stations to best locations)
     
     % Calculate the new base station density based on the cell switch off
     % percentage
@@ -47,57 +46,13 @@ function [BaseStationSO] = MaxRegSo(BaseStation,percentSO,modelParam) % TODO Hea
     % the inputted base stations
     [regPoints]= UT_LatticeBased('hexUni' , ModelParameters);
     regPoints = CenterBs(regPoints);
-    centeredPoints = regPoints;
-    activeCenter = CenterBs(BaseStation.InactiveBs);
-    
-    % Initialize minimum average distance to infinity to ensure first loop
-    % will overwrite the minimum average distance
-    minAvgDist = inf;
-    
-    % Rotate the theoretical base stations and determine which rotation
-    % provides the average minimum distances to the inputted base stations.
-    % The theoretical base stations are rotated by 1 degree each time loop
-    for k = 0:359
-        % Rotate the theoretical base station by 1 degree per loop
-        rotPoints = RotateBs(centeredPoints,k*2*pi/360);
-        inp = inpolygon(rotPoints(:,1),rotPoints(:,2),rx,ry);
-        rotPoints = rotPoints(inp,:);
-        
-        % Calculate the minimum distances to each theoretical base station
-        % and the average minimum distances to each theoretical base
-        % station
-        DD = pdist2(activeCenter, rotPoints);
-        minDist = min(DD);
-        avgDist = mean(minDist);
-        
-        % Identify the rotation orientation with the minimum average
-        % minimum distance to each theoretical base station
-        if avgDist < minAvgDist
-            regPoints = rotPoints;
-            minAvgDist = avgDist;
-        end
-    end
-    
-%     figure
-%     plot(regPoints(:,1),regPoints(:,2),'.b');
-    
-    % Calculate the number of base stations to keep on
-    numOn = length(regPoints);
- 
-    % Calculate the base station distance to the regular points and keep on
-    % the closest base stations to the theoretical base stations
-    % sequentially.
-    index = zeros(1,numOn);
-    for k = 1:numOn
-        DD = pdist2(activeCenter, regPoints(k,:));
-        [~, minindex] = min(DD);
-        index(k) = minindex;
-    end
+    inp = inpolygon(regPoints(:,1),regPoints(:,2),rx,ry);
+    regPoints = regPoints(inp,:);
     
     % Keep on the base station with the minimum distance to the theoretical
     % base stations
-    BaseStation.ActiveBs = [BaseStation.ActiveBs ; BaseStation.InactiveBs(index,:)];
-    BaseStation.InactiveBs(index,:) = [];
+    BaseStation.ActiveBs = [BaseStation.ActiveBs ; regPoints];
+    BaseStation.InactiveBs = [];
 
     % Output the resulting base station set
     BaseStationSO = BaseStation;

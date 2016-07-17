@@ -1,7 +1,7 @@
-function [] = PlotSOvsSIRdiff()
+function [] = PlotSOvsSIR()
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
-    load('data/Test_SOvsSIRdiffData2.mat', 'CsoTest');
+    load('data/Test_SOvsSIRData.mat', 'CsoTest');
     
     testNum = 5;
     colours = ['k' 'm' 'g' 'r' 'b' 'c' 'y'];
@@ -9,7 +9,7 @@ function [] = PlotSOvsSIRdiff()
     
     % Plot CN
     f = figure;
-    set(f,'name','Switch Off Percentage vs SIR difference','numbertitle','off');
+    set(f,'name','Switch Off Percentage vs SIR','numbertitle','off');
     
     for j = 1:5
         h = [];
@@ -33,11 +33,13 @@ function [] = PlotSOvsSIRdiff()
         end
 
         %axis([-50 50 -50 50]);
-        title(CsoTest.TestBs(1).TestPlot(j).Tag);
+        xlabel('Switch Off Percentage');
+        ylabel('SIR (dB)');
+        title(strcat('Input CD: ', CsoTest.TestBs(1).TestPlot(j).Tag));
         hold off;
     end
     
-    legend(h,'Min Dist','2nd Nearest','Max Num Nearest','Min Voronoi','Max Regularity');
+    legend(h,'Greedy Deletion','Max Regularity','Random SO','Genie Aided','NeighborhoodSO');
     
 end
 
