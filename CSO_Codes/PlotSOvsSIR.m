@@ -31,6 +31,7 @@ function [] = PlotSOvsSIR()
             plotdata = CsoTest.TestBs(k).TestPlot(j).SirData;
             p = polyfit(plotdata(:,1),plotdata(:,2),1);
             h = [h, plot(plotdata(:,3),plotdata(:,2),strcat('-',colours(k),markers(k)))];
+            axis([0 1 20 33]);
             %plot(x,polyval(p,x),strcat('-',colours(k)));
         end
 

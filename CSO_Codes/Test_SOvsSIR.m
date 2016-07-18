@@ -21,7 +21,8 @@ CovAvg = zeros(1,5);
  UsersIn=10000;
  User_ModlPrmtrs=ModelParaSet();        
  User_ModlPrmtrs.lambda=UsersIn*10^-6;
- BS_ModlPrmtrs.alpha_norm=0; %TODO: Changed from 2
+ User_ModlPrmtrs.win=[-400,400,-400,400];
+ BS_ModlPrmtrs.alpha_norm=2; %TODO: Changed from 2
  
 % Initialize Channel
  Exponent = 4; %pathloss Exponent
@@ -93,12 +94,13 @@ for l = 1:5
                 CsoTest.TestBs(k).InactiveBs = [];
             end
 
+            CsoTest.TestBs(4) = GenieAidedSO(CsoTest.TestBs(4),percentSO,ModelParameters);
+            
             % Run SO algorithms on the base station locations
             if percentSO > 0
-                CsoTest.TestBs(1) = AverageNearestSO(CsoTest.TestBs(1),percentSO,2);
+                CsoTest.TestBs(1) = GreedyDeletion(CsoTest.TestBs(1),percentSO);
                 CsoTest.TestBs(2) = MaxRegSoWithShift(CsoTest.TestBs(2),percentSO,ModelParameters);
                 CsoTest.TestBs(3) = RandomSO(CsoTest.TestBs(3),percentSO);
-                CsoTest.TestBs(4) = GenieAidedSO(CsoTest.TestBs(4),percentSO,ModelParameters);
                 CsoTest.TestBs(5) = NeighborhoodSO(CsoTest.TestBs(5),percentSO);
             end
                 
@@ -112,7 +114,11 @@ for l = 1:5
                 % 50th percentile
                 % SIR_dB = prctile(SIR_dB,50);
                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
-                SirData(((j-1)*10 + m + 1),:) = [percentSO, SIR_dB, size(CsoTest.TestBs(k).ActiveBs,1)];%1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs]; %TODO:CHANGE BACK TO 10
+                realSO = 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs;
+                if (realSO < 0)
+                    realSO = 0;
+                end
+                SirData(((j-1)*10 + m + 1),:) = [percentSO, SIR_dB, realSO]; %TODO:CHANGE BACK TO 10
                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
                 
                 [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);

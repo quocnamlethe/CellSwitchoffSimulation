@@ -24,7 +24,7 @@ function [BaseStationSO] = RandomSO(BaseStation,percentSO)
     nPoints = length(BaseStation.ActiveBs);
     numSO = round(nPoints * percentSO);
     
-    [y,inX] = datasample(BaseStation.ActiveBs(:,1),numSO);
+    [y,inX] = datasample(BaseStation.ActiveBs(:,1),numSO,'Replace',false);
     
     % Switch off the random base stations
     BaseStation.InactiveBs = [BaseStation.InactiveBs; BaseStation.ActiveBs(inX,:)];
