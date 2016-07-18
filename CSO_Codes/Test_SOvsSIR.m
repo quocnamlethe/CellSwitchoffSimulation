@@ -33,7 +33,7 @@ for k = 1:testNum
     CsoTest.TestBs(k).TestPlot = repmat([TestPlotSet('initial')],1,5);
 end
 
-plotData = nan(100,2); %TODO FIX BACK TO 100
+plotData = nan(100,3); %TODO FIX BACK TO 100
 
 warning off;
 for l = 1:5
@@ -66,6 +66,7 @@ for l = 1:5
         CsoTest.InitialBs.CN = CN;
         CsoTest.InitialBs.CV = CV;
         CsoTest.InitialBs.CD = CD;
+        numBs = size(InitialBs,1);
         
         % Calculate initial SIR value
         [InitialSIR] = SIR_RayleighCh3(InitialBs,User_Locations,ChannelParamters);
@@ -111,8 +112,17 @@ for l = 1:5
                 % 50th percentile
                 % SIR_dB = prctile(SIR_dB,50);
                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
-                SirData(((j-1)*10 + m + 1),:) = [percentSO, SIR_dB]; %TODO:CHANGE BACK TO 10
+                SirData(((j-1)*10 + m + 1),:) = [percentSO, SIR_dB, size(CsoTest.TestBs(k).ActiveBs,1)];%1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs]; %TODO:CHANGE BACK TO 10
                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
+                
+                [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
+                CsoTest.TestBs(k).CN = CN;
+                CsoTest.TestBs(k).CV = CV;
+                CsoTest.TestBs(k).CD = CD;
+                
+                CdData = CsoTest.TestBs(k).TestPlot(l).CdData;
+                CdData = [CdData ; percentSO, CD, size(CsoTest.TestBs(k).ActiveBs,1)];
+                CsoTest.TestBs(k).TestPlot(l).CdData = CdData;
             end
         end
     end
@@ -127,14 +137,22 @@ for l = 1:5
         else
             CsoTest.TestBs(k).TestPlot(l).Tag = '0';
         end
-        SirTemp = zeros(10,2); %TODO CHANGE BACK TO 10
+        SirTemp = zeros(10,3); %TODO CHANGE BACK TO 10
         SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
+        CdTemp = zeros(10,3);
+        CdData = CsoTest.TestBs(k).TestPlot(l).CdData;
         for m = 0:9 %TODO CHANGE BACK TO 9
             SirIndex = find(SirData(:,1) == 0.1*m);
             avgSirData = nanmean(SirData(SirIndex,2));
-            SirTemp(m+1,:) = [0.1*m, avgSirData];
+            avgSO = nanmean(SirData(SirIndex,3));
+            SirTemp(m+1,:) = [0.1*m, avgSirData, avgSO];
+            
+            CdIndex = find(CdData(:,1) == 0.1*m);
+            avgCdData = mean(CdData(CdIndex,2));
+            CdTemp(m+1,:) = [0.1*m, avgCdData, avgSO];
         end
         CsoTest.TestBs(k).TestPlot(l).SirData = SirTemp;
+        CsoTest.TestBs(k).TestPlot(l).CdData = CdTemp;
     end
 end
 warning on;

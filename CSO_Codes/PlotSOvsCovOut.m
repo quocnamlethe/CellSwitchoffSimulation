@@ -1,7 +1,7 @@
 function [] = PlotSOvsCovOut()
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
-    load('data/Test_SOvsCoVoutData.mat', 'CsoTest');
+    load('data/Test_SOvsSIRData.mat', 'CsoTest');
     
     testNum = 5;
     colours = ['k' 'm' 'g' 'r' 'b' 'c' 'y'];
