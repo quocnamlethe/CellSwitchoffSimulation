@@ -112,7 +112,7 @@ function [BaseStationSO] = NeighborhoodSO(BaseStation,percentSO)
     BaseStation.InactiveBs = offBS;
 	BaseStation.ActiveBs = S;
     
-    % TODO: Add greedy addition and greedy deletion steps
+    % greedy addition and greedy deletion steps
     if (realSO > numSO)
         BaseStation = GreedyAddSOn(BaseStation,realSO - numSO);
     elseif (realSO < numSO)

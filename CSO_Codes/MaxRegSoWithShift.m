@@ -29,6 +29,10 @@ function [BaseStationSO] = MaxRegSoWithShift(BaseStation,percentSO,modelParam) %
 %           c) Keep the closest base station to each of the theoretical
 %              locations. This is done sequentially and the base stations with the
 %              minimum distances from the theoretical locations are kept first
+
+    % Calculate the number of base stations to switch off
+    nPoints = length(BaseStation.ActiveBs);
+    numSO = round(nPoints * percentSO);
     
     % Calculate the new base station density based on the cell switch off
     % percentage
@@ -153,7 +157,8 @@ function [BaseStationSO] = MaxRegSoWithShift(BaseStation,percentSO,modelParam) %
     regPoints = regPoints(inp,:);
     
     % Calculate the number of base stations to keep on
-    numOn = length(regPoints);
+    numOn = size(regPoints,1);
+    realSO = nPoints - numOn;
  
     % Calculate the base station distance to the regular points and keep on
     % the closest base stations to the theoretical base stations
@@ -161,6 +166,9 @@ function [BaseStationSO] = MaxRegSoWithShift(BaseStation,percentSO,modelParam) %
     index = zeros(1,numOn);
     for k = 1:numOn
         DD = pdist2(activeCenter, regPoints(k,:));
+        if (k > 1)
+            DD(index(1:(k-1))) = inf;
+        end
         [~, minindex] = min(DD);
         index(k) = minindex;
     end
@@ -169,6 +177,13 @@ function [BaseStationSO] = MaxRegSoWithShift(BaseStation,percentSO,modelParam) %
     % base stations
     BaseStation.ActiveBs = [BaseStation.ActiveBs ; BaseStation.InactiveBs(index,:)];
     BaseStation.InactiveBs(index,:) = [];
+    
+    % greedy addition and greedy deletion steps
+    if (realSO > numSO)
+        BaseStation = GreedyAddSOn(BaseStation,realSO - numSO);
+    elseif (realSO < numSO)
+        BaseStation = GreedyDeletionExact(BaseStation,numSO-realSO);
+    end
 
     % Output the resulting base station set
     BaseStationSO = BaseStation;

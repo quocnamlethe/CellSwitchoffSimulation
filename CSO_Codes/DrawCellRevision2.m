@@ -43,9 +43,9 @@ function drawLine(x,y,origin,scaling,onColor,offColor,onoff)
     x = x * scaling + origin(1);
     y = y * scaling + origin(2) - 5*scaling; % To change the origin point of the base station change the 5 value
     if strcmp(onoff,'on')
-        line(x,y,'LineWidth',0.7*scaling,'Color',onColor);
+        line(x,y,'LineWidth',0.7*scaling/12,'Color',onColor);
     else
-        line(x,y,'LineWidth',0.5*scaling,'Color',offColor);
+        line(x,y,'LineWidth',0.5*scaling/12,'Color',offColor);
     end
 end
 

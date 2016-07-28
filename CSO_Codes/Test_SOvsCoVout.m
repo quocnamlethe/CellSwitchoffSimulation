@@ -1,6 +1,8 @@
 % Wait bar
 hwait = waitbar(0,'Calculating');
 
+tic;
+
 % Initialize the model parameters
 ModelParameters = ModelParaSet();
 ModelParameters.lambda = 100e-6;          
@@ -106,4 +108,6 @@ end
 warning on;
 
 save('data/Test_SOvsCoVoutData.mat', 'CsoTest');
+runTime = toc;
+fprintf('Runtime: %f\n',runTime);
 close(hwait);

@@ -154,11 +154,11 @@ for k = 1:2 % TODO: Change to 4
     axes(guiHandle.(genvarname(strcat(Tag, '_axes'))));
     axesHandle = guiHandle.(genvarname(strcat(Tag, '_axes')));
 
-    hplot = plot(guiHandle.(genvarname(strcat(Tag, '_axes'))),xp,yp,'+b','linewidth',2);
-    set(hplot,'HitTest','off');
-    set(gcf,'WindowButtonDownFcn',@test1_axes_ButtonDownFcn);
-    set(hplot,'ButtonDownFcn',@test1_axes_ButtonDownFcn);
-    hold(axesHandle,'on');
+%     hplot = plot(guiHandle.(genvarname(strcat(Tag, '_axes'))),xp,yp,'+b','linewidth',2);
+%     set(hplot,'HitTest','off');
+%     set(gcf,'WindowButtonDownFcn',@test1_axes_ButtonDownFcn);
+%     set(hplot,'ButtonDownFcn',@test1_axes_ButtonDownFcn);
+%     hold(axesHandle,'on');
 
     delaunay(xp,yp);
     DT=delaunayTriangulation(xp,yp);
@@ -166,19 +166,25 @@ for k = 1:2 % TODO: Change to 4
     axes(axesHandle);
     triplot(DT,':g','linewidth',2)
     hold(axesHandle,'on'); 
+    for j = 1:size(xp,1)
+        DrawCellRevision2(CsoTest.TestBs(k).ActiveBs(j,:),8,'k',[0.7 0.7 0.7],'on');
+    end
     box on
-    [vxp,vyp] = voronoi(xp,yp);
-    plot(axesHandle,xp,yp,'r+',vxp,vyp,'r-','linewidth',2)
+%     [vxp,vyp] = voronoi(xp,yp);
+%     plot(axesHandle,xp,yp,'r+',vxp,vyp,'r-','linewidth',2)
     hold(axesHandle,'on');
-    axis(axesHandle,[-500 500 -500 500]);
+    axis(axesHandle,[-550 550 -550 550]);
     % set(gca,'fontsize',14)
     ax=gca; 
     ax.XTick=0;
     ax.YTick=0;
     hold on
     
-    grey = [0.4,0.4,0.4,0.4];
-    hplot = plot(guiHandle.(genvarname(strcat(Tag, '_axes'))),inactivex,inactivey,'+','linewidth',2,'Color',grey);
+%     grey = [0.4,0.4,0.4,0.4];
+%     hplot = plot(guiHandle.(genvarname(strcat(Tag, '_axes'))),inactivex,inactivey,'+','linewidth',2,'Color',grey);
+    for j = 1:size(CsoTest.TestBs(k).InactiveBs,1)
+        DrawCellRevision2(CsoTest.TestBs(k).InactiveBs(j,:),8,'k',[0.7 0.7 0.7],'off');
+    end
     hold off
 end
 

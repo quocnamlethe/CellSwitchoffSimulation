@@ -97,7 +97,7 @@ for l = 1:5
             
             % Run SO algorithms on the base station locations
             if percentSO > 0
-                CsoTest.TestBs(1) = AverageNearestSO(CsoTest.TestBs(1),percentSO,2);
+                CsoTest.TestBs(1) = GreedyDeletion(CsoTest.TestBs(1),percentSO);
                 CsoTest.TestBs(2) = MaxRegSoWithShift(CsoTest.TestBs(2),percentSO,ModelParameters);
                 CsoTest.TestBs(3) = RandomSO(CsoTest.TestBs(3),percentSO);
                 CsoTest.TestBs(5) = NeighborhoodSO(CsoTest.TestBs(5),percentSO);

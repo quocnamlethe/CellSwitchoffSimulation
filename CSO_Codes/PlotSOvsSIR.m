@@ -1,7 +1,7 @@
 function [] = PlotSOvsSIR()
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
-    load('data/Test_SOvsSIRData.mat', 'CsoTest');
+    load('data/Test_SOvsSIRData2.mat', 'CsoTest');
     
     testNum = 5;
     markers = ['*' 'o' '+' 'x' 's' 'd' '^'];
@@ -12,7 +12,7 @@ function [] = PlotSOvsSIR()
     f = figure;
     set(f,'name','Switch Off Percentage vs SIR','numbertitle','off');
     
-    for j = 1:5
+    for j = 1:3
         h = [];
         subplot(2,3,j);
         hold on;
@@ -31,7 +31,7 @@ function [] = PlotSOvsSIR()
             plotdata = CsoTest.TestBs(k).TestPlot(j).SirData;
             p = polyfit(plotdata(:,1),plotdata(:,2),1);
             h = [h, plot(plotdata(:,3),plotdata(:,2),strcat('-',colours(k),markers(k)))];
-            axis([0 1 20 33]);
+            %axis([0 1 20 33]);
             %plot(x,polyval(p,x),strcat('-',colours(k)));
         end
 

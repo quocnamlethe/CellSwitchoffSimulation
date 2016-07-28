@@ -5,15 +5,21 @@ tic;
 % Initialize the model parameters
 ModelParameters = ModelParaSet();
 ModelParameters.lambda = 100e-6;
+ModelParameters.metric = 'CD';
 
 % Initialize channel parameters
 ChannelParamters = ChannelSetup(); 
 ChannelParamters.AssociationType = 'StrongestBS';
 ChannelParamters.SIRMericType = 'SIR';
 
+coveragePercentage = 5;
+
 % Initialize the test set
-testNum = 5;
-CsoTest = CsoTestSet(testNum);
+algNum = 5;
+drop = 10;
+testPert = [0 0.359938995 2];
+percentSO = 0:0.05:0.9;
+CsoTest = CsoTestSet(algNum);
 Cov = zeros(10,1); %TODO: FIX
 CovAvg = zeros(1,5);
 
@@ -21,29 +27,24 @@ CovAvg = zeros(1,5);
  UsersIn=10000;
  User_ModlPrmtrs=ModelParaSet();        
  User_ModlPrmtrs.lambda=UsersIn*10^-6;
- User_ModlPrmtrs.win=[-400,400,-400,400];
- BS_ModlPrmtrs.alpha_norm=2; %TODO: Changed from 2
+ User_ModlPrmtrs.win=ModelParameters.win * 0.6;
+ BS_ModlPrmtrs.alpha_norm=2;
  
-% Initialize Channel
- Exponent = 4; %pathloss Exponent
- Shadow = 6; % [dB]  % Log-distance or Log-normal shadowing
- 
- SIRMericType='MedianSIR';
- 
-for k = 1:testNum
+for k = 1:algNum
     CsoTest.TestBs(k).TestPlot = repmat([TestPlotSet('initial')],1,5);
+    CsoTest.TestBs(k).RawData = repmat(RawBs([],[],[],[]),1,drop*length(testPert)*length(percentSO));
 end
 
 plotData = nan(100,3); %TODO FIX BACK TO 100
 
 warning off;
-for l = 1:5
+for l = 1:length(testPert)
     % Test for incrementing perturbation values
-    ModelParameters.alpha_norm = 0.25 * l - 0.25;
+    ModelParameters.alpha_norm = testPert(l);
     %CsoTest.ModelParameters = ModelParameters;
     
     % Initialize the testPlot structure for each test method
-    for k = 1:testNum
+    for k = 1:algNum
         testPlot = CsoTest.TestBs(k).TestPlot;
         testPlot(l) = TestPlotSet(num2str(ModelParameters.alpha_norm));
         testPlot(l).CnData = plotData;
@@ -54,7 +55,7 @@ for l = 1:5
     end
     
     % Test 10 times per switch off percentage
-    for j = 1:10        % TODO: FIX SIZE
+    for j = 1:drop
         % Generate base station locations
         [InitialBs]= UT_LatticeBased('hexUni' , ModelParameters);
         
@@ -72,53 +73,51 @@ for l = 1:5
         % Calculate initial SIR value
         [InitialSIR] = SIR_RayleighCh3(InitialBs,User_Locations,ChannelParamters);
         
-        % 95th percentile
-        %InitialSIR = prctile(InitialSIR,95);
-        % 50th percentile
-        InitialSIR = prctile(InitialSIR,50);
+        % percentile
+        InitialSIR = prctile(InitialSIR,coveragePercentage);
         
         % Get current CD value
         Cov(j) = CD;
 
         % Test each switch off percentage
-        for m = 0:9 %TODO CHANGE BACK TO 9
+        for m = 1:length(percentSO)
+            index = (l-1)*length(percentSO)*drop + (j-1)*length(percentSO) + m;
             % TODO Fix wait bar to match new values
-            waitbar(((l - 1)*10*10 + (j - 1)*10 + m)/(5*10*10),hwait);
-            
-            % Variable switch off percentage
-            percentSO = 0.1 * m; %TODO CHANGE BACK TO 0.1
+            waitbar(index/(length(testPert)*length(percentSO)*drop),hwait);
 
             % Initialize the test structures
-            for k = 1:testNum
+            for k = 1:algNum
                 CsoTest.TestBs(k).ActiveBs = InitialBs;
                 CsoTest.TestBs(k).InactiveBs = [];
             end
 
-            CsoTest.TestBs(4) = GenieAidedSO(CsoTest.TestBs(4),percentSO,ModelParameters);
+            CsoTest.TestBs(4) = GenieAidedSO(CsoTest.TestBs(4),percentSO(m),ModelParameters);
             
             % Run SO algorithms on the base station locations
             if percentSO > 0
-                CsoTest.TestBs(1) = GreedyDeletion(CsoTest.TestBs(1),percentSO);
-                CsoTest.TestBs(2) = MaxRegSoWithShift(CsoTest.TestBs(2),percentSO,ModelParameters);
-                CsoTest.TestBs(3) = RandomSO(CsoTest.TestBs(3),percentSO);
-                CsoTest.TestBs(5) = NeighborhoodSO(CsoTest.TestBs(5),percentSO);
+                CsoTest.TestBs(1) = GreedyDeletion(CsoTest.TestBs(1),percentSO(m));
+                CsoTest.TestBs(2) = MaxRegSoWithShift(CsoTest.TestBs(2),percentSO(m),ModelParameters);
+                CsoTest.TestBs(3) = RandomSO(CsoTest.TestBs(3),percentSO(m));
+                CsoTest.TestBs(5) = NeighborhoodSO(CsoTest.TestBs(5),percentSO(m));
+            end
+            
+            for k = 1:algNum
+                CsoTest.TestBs(k).RawData(index) = RawBs(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO(m));
             end
                 
             % Calculate the CoVs and input them into the test plot
             % structures
-            for k = 1:testNum                
+            for k = 1:algNum                
                 [SIR_dB] = SIR_RayleighCh3(CsoTest.TestBs(k).ActiveBs,User_Locations,ChannelParamters);
                 
-                % 95th percentile
-                SIR_dB = prctile(SIR_dB,95);
-                % 50th percentile
-                % SIR_dB = prctile(SIR_dB,50);
+                % percentile
+                SIR_dB = prctile(SIR_dB,coveragePercentage);
                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
                 realSO = 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs;
                 if (realSO < 0)
                     realSO = 0;
                 end
-                SirData(((j-1)*10 + m + 1),:) = [percentSO, SIR_dB, realSO]; %TODO:CHANGE BACK TO 10
+                SirData(((j-1)*10 + m + 1),:) = [percentSO(m), SIR_dB, realSO]; %TODO:CHANGE BACK TO 10
                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
                 
                 [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
@@ -127,7 +126,7 @@ for l = 1:5
                 CsoTest.TestBs(k).CD = CD;
                 
                 CdData = CsoTest.TestBs(k).TestPlot(l).CdData;
-                CdData = [CdData ; percentSO, CD, size(CsoTest.TestBs(k).ActiveBs,1)];
+                CdData = [CdData ; percentSO(m), CD, size(CsoTest.TestBs(k).ActiveBs,1)];
                 CsoTest.TestBs(k).TestPlot(l).CdData = CdData;
             end
         end
@@ -137,7 +136,7 @@ for l = 1:5
     CovAvg(l) = mean(Cov);
     
     % Set Tag to average CoV value
-    for k = 1:testNum
+    for k = 1:algNum
         if CovAvg(l) > 0.001
             CsoTest.TestBs(k).TestPlot(l).Tag = num2str(CovAvg(l),2);
         else
@@ -147,15 +146,15 @@ for l = 1:5
         SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
         CdTemp = zeros(10,3);
         CdData = CsoTest.TestBs(k).TestPlot(l).CdData;
-        for m = 0:9 %TODO CHANGE BACK TO 9
-            SirIndex = find(SirData(:,1) == 0.1*m);
+        for m = 1:length(percentSO) %TODO CHANGE BACK TO 9
+            SirIndex = find(SirData(:,1) == percentSO(m));
             avgSirData = nanmean(SirData(SirIndex,2));
             avgSO = nanmean(SirData(SirIndex,3));
-            SirTemp(m+1,:) = [0.1*m, avgSirData, avgSO];
+            SirTemp(m+1,:) = [percentSO(m), avgSirData, avgSO];
             
-            CdIndex = find(CdData(:,1) == 0.1*m);
+            CdIndex = find(CdData(:,1) == percentSO(m));
             avgCdData = mean(CdData(CdIndex,2));
-            CdTemp(m+1,:) = [0.1*m, avgCdData, avgSO];
+            CdTemp(m+1,:) = [percentSO(m), avgCdData, avgSO];
         end
         CsoTest.TestBs(k).TestPlot(l).SirData = SirTemp;
         CsoTest.TestBs(k).TestPlot(l).CdData = CdTemp;
@@ -163,7 +162,7 @@ for l = 1:5
 end
 warning on;
 
-save('data/Test_SOvsSIRData.mat', 'CsoTest');
+save('data/Test_SOvsSIRData2.mat', 'CsoTest');
 runTime = toc;
 fprintf('Runtime: %f\n',runTime);
 close(hwait);

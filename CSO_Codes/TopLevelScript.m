@@ -37,8 +37,9 @@ for k = 1:4
     CsoTest.TestBs(k).CD = CD;
 end
 
-CsoTest.TestBs(1) = GreedyDeletion(CsoTest.TestBs(1),0.33);
-CsoTest.TestBs(2) = GenieAidedSO(CsoTest.TestBs(2),0.33,ModelParameters);
+CsoTest.TestBs(1) = MaxRegSoWithShift(CsoTest.TestBs(1),0.8,ModelParameters);
+CsoTest.TestBs(2) = GenieAidedSO(CsoTest.TestBs(2),0.8,ModelParameters);
+%CsoTest.TestBs(2) = GreedyDeletion(CsoTest.TestBs(2),2/3);
 
 for k = 1:4
     [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
@@ -48,10 +49,10 @@ for k = 1:4
 end
 
 [SIR_dB] = SIR_RayleighCh3(CsoTest.TestBs(1).ActiveBs,User_Locations,ChannelParamters);
-SIR_dB = prctile(SIR_dB,95);
-fprintf('Greedy Delete: %f\n',SIR_dB);
+SIR_dB = prctile(SIR_dB,5);
+fprintf('MaxReg: %f\n',SIR_dB);
 [SIR_dB] = SIR_RayleighCh3(CsoTest.TestBs(2).ActiveBs,User_Locations,ChannelParamters);
-SIR_dB = prctile(SIR_dB,95);
+SIR_dB = prctile(SIR_dB,5);
 fprintf('Genie: %f\n',SIR_dB);
 
 save(strcat('data/testing',num2str(1),'.mat'), 'CsoTest');
