@@ -18,19 +18,19 @@ function [] = PlotSOvsSIRdiff()
         hold on;
 
         for k = 1:testNum
-            SirTemp = zeros(10,3);
-            for m = 0:9
-                SirData = CsoTest.TestBs(k).TestPlot(j).SirData;
-                SirIndex = find(SirData(:,1) == 0.1*m);
-                avgSirData = mean(SirData(SirIndex,2));
-                avgSO = mean(SirData(SirIndex,3));
-                SirTemp(m+1,:) = [0.1*m, avgSirData, avgSO];
-            end
-            CsoTest.TestBs(k).TestPlot(j).SirData = SirTemp;
+%             SirTemp = zeros(10,3);
+%             for m = 0:9
+%                 SirData = CsoTest.TestBs(k).TestPlot(j).SirData;
+%                 SirIndex = find(SirData(:,1) == 0.1*m);
+%                 avgSirData = mean(SirData(SirIndex,2));
+%                 avgSO = mean(SirData(SirIndex,3));
+%                 SirTemp(m+1,:) = [0.1*m, avgSirData, avgSO];
+%             end
+%             CsoTest.TestBs(k).TestPlot(j).SirData = SirTemp;
         
             plotdata = CsoTest.TestBs(k).TestPlot(j).SirData;
-            plotdata(plotdata(:,3) < 0,3) = 0;
-            h = [h, plot(plotdata(:,3),plotdata(:,2),strcat('-',colours(k),markers(k)))];
+            plotdata(plotdata(1:10,3) < 0,3) = 0;
+            h = [h, plot(plotdata(1:10,3),plotdata(1:10,2),strcat('-',colours(k),markers(k)))];
             hold on;
             %plot(x,polyval(p,x),strcat('-',colours(k)));
         end

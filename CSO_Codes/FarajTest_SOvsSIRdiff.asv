@@ -21,7 +21,7 @@ testPert = [0 0.129074508 0.278385168 0.450877783 0.728588577 2];
 CsoTest = CsoTestSet(algNum);
 Cov = zeros(1,1); %TODO: FIX
 CovAvg = zeros(1,5);
-RawSIR = zeros(algNum,drop,2);
+RawSIR = zeros(algNum,drop);
 
 % Initialize Users
  UsersIn=10000;
@@ -132,11 +132,10 @@ for l = 1:length(testPert)
                 SIR_dB = prctile(SIR_dB,5);
                 % 50th percentile
                 % SIR_dB = prctile(SIR_dB,50);
-                RawSIR(k,j,1) = SIR_dB;
-                RawSIR(k,j,2) = 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs;
-%                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
-%                 SirData(((j-1)*10 + m + 1),:) = [percentSO, (SIR_dB - InitialSIR), 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs];
-%                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
+                RawSIR(k,j) = SIR_dB;
+                SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
+                SirData(((j-1)*10 + m + 1),:) = [percentSO, (SIR_dB - InitialSIR), 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs];
+                CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
             end
         end
         
@@ -149,35 +148,32 @@ for l = 1:length(testPert)
             else
                 CsoTest.TestBs(k).TestPlot(l).Tag = '0';
             end
-            CsoTest.TestBs(k).TestPlot(l).SirData(m+1,1) = 0.1*m;
-            CsoTest.TestBs(k).TestPlot(l).SirData(m+1,2) = mean(RawSIR(k,:,1));
-            CsoTest.TestBs(k).TestPlot(l).SirData(m+1,3) = mean(RawSIR(k,:,2));
-        end
+            Cso
     end
     
-%     % Get the median of tested input CoVs
-%     CovAvg(l) = mean(Cov);
-%     
-%     % Set Tag to average CoV value
-%     for k = 1:algNum
-%         if CovAvg(l) > 0.001
-%             CsoTest.TestBs(k).TestPlot(l).Tag = num2str(CovAvg(l),2);
-%         else
-%             CsoTest.TestBs(k).TestPlot(l).Tag = '0';
-%         end
-%         SirTemp = zeros(10,3);
-%         for m = 0:9
-%             SirIndex = find(SirData(:,1) == 0.1*m);
-%             avgSirData = nanmean(SirData(SirIndex,2));
-%             avgSO = nanmean(SirData(SirIndex,3));
-%             SirTemp(m+1,:) = [0.1*m, avgSirData, avgSO];
-%         end
-%         CsoTest.TestBs(k).TestPlot(l).CdData = SirTemp;
-%     end
+    % Get the median of tested input CoVs
+    CovAvg(l) = mean(Cov);
+    
+    % Set Tag to average CoV value
+    for k = 1:algNum
+        if CovAvg(l) > 0.001
+            CsoTest.TestBs(k).TestPlot(l).Tag = num2str(CovAvg(l),2);
+        else
+            CsoTest.TestBs(k).TestPlot(l).Tag = '0';
+        end
+        SirTemp = zeros(10,3);
+        for m = 0:9
+            SirIndex = find(SirData(:,1) == 0.1*m);
+            avgSirData = nanmean(SirData(SirIndex,2));
+            avgSO = nanmean(SirData(SirIndex,3));
+            SirTemp(m+1,:) = [0.1*m, avgSirData, avgSO];
+        end
+        CsoTest.TestBs(k).TestPlot(l).CdData = SirTemp;
+    end
 end
 warning on;
 
-save('data/Test_SOvsSIRdiffFarajData.mat', 'CsoTest');
+save('data/Test_SOvsSIRdiffFarajData.mat', 'CsoTest','RawSIR');
 runTime = toc;
 fprintf('Runtime: %f\n',runTime);
 close(hwait);
