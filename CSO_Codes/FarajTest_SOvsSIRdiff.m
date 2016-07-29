@@ -21,6 +21,7 @@ testPert = [0 0.129074508 0.278385168 0.450877783 0.728588577 2];
 CsoTest = CsoTestSet(algNum);
 Cov = zeros(1,1); %TODO: FIX
 CovAvg = zeros(1,5);
+RawSIR = zeros(algNum,drop);
 
 % Initialize Users
  UsersIn=10000;
@@ -60,15 +61,15 @@ for l = 1:length(testPert)
     dropCount = 1;
     for n = 1:length(BsSet)
         if BsSet(n).Pert == testPert(l)
-            BsSetIndex(dropCount) = n;
-            dropCount = dropCount + 1;
+            pertIndex = n;
+            break;
         end
     end
     
     % Test 1 times per switch off percentage
     for j = 1:drop        % TODO: FIX SIZE
         % Generate base station locations
-        InitialBs = BsSet(BsSetIndex(j)).Bs;
+        InitialBs = BsSet(pertIndex).BsSet(j).Bs;
         %[InitialBs]= UT_LatticeBased('hexUni' , ModelParameters);
         
         % Generate user locations
@@ -130,6 +131,7 @@ for l = 1:length(testPert)
                 SIR_dB = prctile(SIR_dB,5);
                 % 50th percentile
                 % SIR_dB = prctile(SIR_dB,50);
+                RawSIR(k,j) = SIR_dB;
                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
                 SirData(((j-1)*10 + m + 1),:) = [percentSO, (SIR_dB - InitialSIR), 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs];
                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
@@ -159,7 +161,7 @@ for l = 1:length(testPert)
 end
 warning on;
 
-save('data/Test_SOvsSIRdiffFarajData.mat', 'CsoTest');
+save('data/Test_SOvsSIRdiffFarajData.mat', 'CsoTest','RawSIR');
 runTime = toc;
 fprintf('Runtime: %f\n',runTime);
 close(hwait);
