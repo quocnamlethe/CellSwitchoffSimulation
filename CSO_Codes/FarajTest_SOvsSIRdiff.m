@@ -16,7 +16,7 @@ ChannelParamters.SIRMericType = 'SIR';
 
 % Initialize the test set
 algNum = 5;
-drop = 10;
+drop = 1000;
 testPert = [0 0.129074508 0.278385168 0.450877783 0.728588577 2];
 CsoTest = CsoTestSet(algNum);
 Cov = zeros(1,1); %TODO: FIX

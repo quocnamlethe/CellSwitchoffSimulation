@@ -14,7 +14,7 @@ ChannelParamters.SIRMericType = 'SIR';
 
 % Initialize the test set
 algNum = 5;
-drop = 10;
+drop = 1000;
 testPert = [0 0.058940989 0.129074508 0.202142206 0.278385168 0.359938995 0.450877783 0.562342129 0.728588577 1.063361881 2];
 CsoTest = CsoTestSet(algNum);
 Cov = zeros(1,1); %TODO: FIX
@@ -122,9 +122,9 @@ for l = 1:length(percentSO)
         % Set Tag to percent SO value
         for k = 1:algNum
             CsoTest.TestBs(k).TestPlot(l).Tag = num2str(percentSO(l),2);
-            for n = 1:drop
+%             for n = 1:drop
                 avgSirData = nanmean(SirTemp(:,2,k));
-            end
+%             end
             CsoTest.TestBs(k).TestPlot(l).SirData(m,:) = [((m-1)*0.1), avgSirData, CovAvg(m)];
         end
     end
