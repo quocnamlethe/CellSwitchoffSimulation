@@ -13,10 +13,13 @@ ModelParameters.lambda = 100e-6;
 ChannelParamters = ChannelSetup(); 
 ChannelParamters.AssociationType = 'StrongestBS';
 ChannelParamters.SIRMericType = 'SIR';
+ChannelParamters.n = 3;
+ChannelParamters.Sigma_dB = 6;
 
 % Initialize the test set
 algNum = 5;
-drop = 1000;
+drop = 100;
+percentile = 5;
 testPert = [0 0.129074508 0.278385168 0.450877783 0.728588577 2];
 CsoTest = CsoTestSet(algNum);
 Cov = zeros(1,1); %TODO: FIX
@@ -96,7 +99,7 @@ for l = 1:length(testPert)
             [InitialSIR] = SIR_RayleighCh3(InitialBs,User_Locations,ChannelParamters);
 
             % 95th percentile
-            InitialSIR = prctile(InitialSIR,5);
+            InitialSIR = prctile(InitialSIR,percentile);
 
             % Get current CD value
             Cov(j) = CD;
@@ -129,7 +132,7 @@ for l = 1:length(testPert)
                 [SIR_dB] = SIR_RayleighCh3(CsoTest.TestBs(k).ActiveBs,User_Locations,ChannelParamters);
                 
                 % 95th percentile
-                SIR_dB = prctile(SIR_dB,5);
+                SIR_dB = prctile(SIR_dB,percentile);
                 % 50th percentile
                 % SIR_dB = prctile(SIR_dB,50);
                 RawSIR(k,j,1) = SIR_dB;
@@ -177,7 +180,7 @@ for l = 1:length(testPert)
 end
 warning on;
 
-save('data/Test_SOvsSIRdiffFarajData.mat', 'CsoTest');
+save('data/Test_SOvsSIRdiffFarajData_a3_s6_sir95.mat', 'CsoTest');
 runTime = toc;
 fprintf('Runtime: %f\n',runTime);
 close(hwait);
