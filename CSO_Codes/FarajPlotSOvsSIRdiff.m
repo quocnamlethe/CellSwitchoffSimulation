@@ -1,7 +1,7 @@
 function [] = PlotSOvsSIRdiff()
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
-    load('data/Test_SOvsSIRdiffFarajData.mat', 'CsoTest');
+    load('data/Test_SOvsSIRdiffFarajData_a4_s0_sir50.mat', 'CsoTest');
     
     testNum = 5;
     markers = ['*' 'o' '+' 'x' 's' 'd' '^'];

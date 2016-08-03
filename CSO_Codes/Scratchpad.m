@@ -23,20 +23,24 @@ BS_ModlPrmtrs.alpha_norm=2;
 SIRData = zeros(570,2);
 
 % Generate user locations
+tic;
 [User_Locations]=UT_LatticeBased('hexUni', User_ModlPrmtrs);
+SIR_dB = SIR_RayleighCh3(CsoTest.RawBs(1).ActiveBs,User_Locations,ChannelParamters);
+runTime = toc;
+fprintf('Runtime: %f\n',runTime);
 
-for j = 1:length(SIRData)
-     SIR_dB = SIR_RayleighCh3(CsoTest.TestBs(2).RawData(j).ActiveBs,User_Locations,ChannelParamters);
-     SIRData(j,1) = CsoTest.TestBs(2).RawData(j).SwitchOff;
-     SIRData(j,2) = prctile(SIR_dB,coveragePercentage);
-end
-
-k = 2;
-SirTemp = zeros(10,3);
-for m = 1:length(percentSO)
-    SirIndex = find(SIRData(:,1) == percentSO(m));
-    avgSirData = nanmean(SIRData(SirIndex,2));
-    avgSO = nanmean(SIRData(SirIndex,1));
-    SirTemp(m+1,:) = [percentSO(m), avgSirData, avgSO];
-end
-CsoTest.TestBs(k).TestPlot(l).SirData = SirTemp;
+% for j = 1:length(SIRData)
+%      SIR_dB = SIR_RayleighCh3(CsoTest.TestBs(2).RawData(j).ActiveBs,User_Locations,ChannelParamters);
+%      SIRData(j,1) = CsoTest.TestBs(2).RawData(j).SwitchOff;
+%      SIRData(j,2) = prctile(SIR_dB,coveragePercentage);
+% end
+% 
+% k = 2;
+% SirTemp = zeros(10,3);
+% for m = 1:length(percentSO)
+%     SirIndex = find(SIRData(:,1) == percentSO(m));
+%     avgSirData = nanmean(SIRData(SirIndex,2));
+%     avgSO = nanmean(SIRData(SirIndex,1));
+%     SirTemp(m+1,:) = [percentSO(m), avgSirData, avgSO];
+% end
+% CsoTest.TestBs(k).TestPlot(l).SirData = SirTemp;

@@ -14,25 +14,13 @@ function [] = PlotSOvsSIR()
     
     for j = 1:3
         h = [];
-        subplot(2,3,j);
+        subplot(2,2,j);
         hold on;
 
-        for k = 1:testNum
-            SirTemp = zeros(10,3);
-            for m = 0:9
-                SirData = CsoTest.TestBs(k).TestPlot(j).SirData;
-                SirIndex = find(SirData(:,1) == 0.1*m);
-                avgSirData = mean(SirData(SirIndex,2));
-                avgSO = mean(SirData(SirIndex,3));
-                SirTemp(m+1,:) = [0.1*m, avgSirData, avgSO];
-            end
-            CsoTest.TestBs(k).TestPlot(j).SirData = SirTemp;
-        
+        for k = 1:testNum        
             plotdata = CsoTest.TestBs(k).TestPlot(j).SirData;
-            p = polyfit(plotdata(:,1),plotdata(:,2),1);
-            h = [h, plot(plotdata(:,3),plotdata(:,2),strcat('-',colours(k),markers(k)))];
-            %axis([0 1 20 33]);
-            %plot(x,polyval(p,x),strcat('-',colours(k)));
+            plotdata(plotdata(1:19,3) < 0,3) = 0;
+            h = [h, plot(plotdata(1:19,3),plotdata(1:19,2),strcat('-',colours(k),markers(k)))];
         end
 
         %axis([-50 50 -50 50]);
