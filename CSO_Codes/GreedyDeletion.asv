@@ -1,31 +1,28 @@
 function [BaseStationSO] = GreedyDeletion(BaseStation,percentSO)
-% GreedyDeletion - The greedy deletion cell switch off algorithm
+% GreedyDeletion - The average distance of n nearest neighbour cell 
+% switch off algorithm
 % 
 % Syntax: [BaseStationSO] = GreedyDeletion(BaseStation,percentSO)
 %
 % Outputs:
 %   BaseStationSO - a structure containing the model description 
 %   representing a set of base stations and their CoVs
-%   BaseStation = struct('ActiveBs',[x1,y2;x2,y2...],'InactiveBs',[]);
 %
 % Inputs:
 %   BaseStation - a structure containing the model description 
 %   representing a set of base stations and their CoVs
 %   percentSO - the percentage of the base stations to switch off
-%   BaseStation = struct('ActiveBs',[x1,y2;x2,y2...],'InactiveBs',[]);
 %
 % Other m-files required: none
 % Subfunctions: none
 % MAT-files required: none
 %
 % Additional Info:
-%   Greedy Deletion Switch Off algorithm:
-%       1) Calculate the base station distance to each base station's 
-%          nearest neighbour
-%       2) Find the 2 base station with the minimum nearest neighbor
-%          distance
-%       3) Remove the base station with the minimum second nearest neighbor
-%          distance
+%   Minimum Average Distance of N Nearest Neighbour Switch Off algorithm:
+%       1) Calculate the base station distance to all neighbours
+%       2) Calculate the average distance to the three nearest neighbours
+%       3) Remove the base station with the minimum average three nearest
+%          neighbour distance
 
     % Calculate the number of base stations to switch off
     nPoints = length(BaseStation.ActiveBs);
