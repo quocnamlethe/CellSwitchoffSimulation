@@ -18,7 +18,7 @@ ChannelParamters.Sigma_dB = 6;
 
 % Initialize the test set
 algNum = 5;
-drop = 100;
+drop = 10;
 percentile = 5;
 testPert = [0 0.058940989 0.129074508 0.202142206 0.278385168 0.359938995 0.450877783 0.562342129 0.728588577 1.063361881 2];
 percentSO = 0:0.05:0.9;
@@ -76,7 +76,7 @@ for l = 1:length(testPert)
         % Test each switch off percentage
         for j = 1:drop
             % TODO Fix wait bar to match new values
-            waitbar(((l - 1)*length(percentSO)*drop + (m - 1)*drop + j)/(length(testPert)*length(percentSO)*drop),hwait);
+            waitbar(((l - 1)*10*drop + (m - 1)*drop + j)/(5*10*drop),hwait);
             
             % Generate base station locations
             InitialBs = BsSet(pertIndex).BsSet(j).Bs;
@@ -108,20 +108,20 @@ for l = 1:length(testPert)
                 CsoTest.TestBs(k).InactiveBs = [];
             end
 
-            CsoTest.TestBs(2) = GenieAidedSO(CsoTest.TestBs(2),percentSO(m),ModelParameters);
+            CsoTest.TestBs(2) = GenieAidedSO(CsoTest.TestBs(2),percentSO,ModelParameters);
             
             % Run SO algorithms on the base station locations
-            if percentSO(m) > 0
-                CsoTest.TestBs(1) = RandomSO(CsoTest.TestBs(1),percentSO(m));
-                CsoTest.TestBs(2) = GenieAidedSO(CsoTest.TestBs(2),percentSO(m),ModelParameters);
-                CsoTest.TestBs(3) = GreedyDeletion(CsoTest.TestBs(3),percentSO(m));
-                CsoTest.TestBs(4) = GreedyAddSO(CsoTest.TestBs(4),percentSO(m));
-                CsoTest.TestBs(5) = SemiGreedyDeletion(CsoTest.TestBs(5),percentSO(m));
+            if percentSO > 0
+                CsoTest.TestBs(1) = RandomSO(CsoTest.TestBs(1),percentSO);
+                CsoTest.TestBs(2) = GenieAidedSO(CsoTest.TestBs(2),percentSO,ModelParameters);
+                CsoTest.TestBs(3) = GreedyDeletion(CsoTest.TestBs(3),percentSO);
+                CsoTest.TestBs(4) = GreedyAddSO(CsoTest.TestBs(4),percentSO);
+                CsoTest.TestBs(5) = SemiGreedyDeletion(CsoTest.TestBs(5),percentSO);
             end
             
-            CsoTest.RawBs = [CsoTest.RawBs RawBs(CsoTest.InitialBs.ActiveBs,CsoTest.InitialBs.InactiveBs,testPert(l),percentSO(m))];
+            CsoTest.RawBs = [CsoTest.RawBs RawBs(CsoTest.InitialBs.ActiveBs,CsoTest.InitialBs.InactiveBs,testPert(l),percentSO)];
             for k = 1:algNum
-                CsoTest.RawBs = [CsoTest.RawBs RawBs(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO(m))];
+                CsoTest.RawBs = [CsoTest.RawBs RawBs(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO)];
             end
                 
             % Calculate the CoVs and input them into the test plot
@@ -136,7 +136,7 @@ for l = 1:length(testPert)
                 % SIR_dB = prctile(SIR_dB,50);
                 RawSIR(k,j,1) = SIR_dB;
                 RawSIR(k,j,2) = 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs;
-                CsoTest.TestBs(k).RawData = [CsoTest.TestBs(k).RawData TestData(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO(m),CD,SIR_dB)];
+                CsoTest.TestBs(k).RawData = [CsoTest.TestBs(k).RawData TestData(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO,CD,SIR_dB)];
 %                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
 %                 SirData(((j-1)*10 + m + 1),:) = [percentSO, (SIR_dB - InitialSIR), 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs];
 %                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
@@ -152,9 +152,9 @@ for l = 1:length(testPert)
             else
                 CsoTest.TestBs(k).TestPlot(l).Tag = '0';
             end
-            CsoTest.TestBs(k).TestPlot(l).SirData(m,1) = percentSO(m);
-            CsoTest.TestBs(k).TestPlot(l).SirData(m,2) = mean(RawSIR(k,:,1));
-            CsoTest.TestBs(k).TestPlot(l).SirData(m,3) = mean(RawSIR(k,:,2));
+            CsoTest.TestBs(k).TestPlot(l).SirData(m+1,1) = 0.1*m;
+            CsoTest.TestBs(k).TestPlot(l).SirData(m+1,2) = mean(RawSIR(k,:,1));
+            CsoTest.TestBs(k).TestPlot(l).SirData(m+1,3) = mean(RawSIR(k,:,2));
         end
     end
     
@@ -180,7 +180,7 @@ for l = 1:length(testPert)
 end
 warning on;
 
-save('data/Test_SOvsSIRdiffFarajData_a4_s0.mat', 'CsoTest');
+save('data/Test_SOvsSIRdiffFarajData_test.mat', 'CsoTest');
 runTime = toc;
 fprintf('Runtime: %f\n',runTime);
 close(hwait);

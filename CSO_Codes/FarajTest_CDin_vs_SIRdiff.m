@@ -114,7 +114,7 @@ for l = 1:length(percentSO)
                 % 95th percentile
                 SIR_dB = prctile(SIR_dB,percentile);
                 %SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
-                SirTemp(m,:,k) = [((m-1)*0.1), (SIR_dB - InitialSIR), 0];
+                SirTemp(m,:,k) = [((m-1)*0.1), SIR_dB, 0];
                 %SirData(((m-1)*drop + j),:) = [((m-1)*0.2), (SIR_dB - InitialSIR), 0];
                 %CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
             end
