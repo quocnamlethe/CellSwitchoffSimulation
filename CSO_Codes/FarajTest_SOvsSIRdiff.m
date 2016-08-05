@@ -13,13 +13,13 @@ ModelParameters.lambda = 200e-6;
 ChannelParamters = ChannelSetup(); 
 ChannelParamters.AssociationType = 'StrongestBS';
 ChannelParamters.SIRMericType = 'SIR';
-ChannelParamters.n = 3;
-ChannelParamters.Sigma_dB = 6;
+ChannelParamters.n = 4;
+ChannelParamters.Sigma_dB = 0;
 
 % Initialize the test set
 algNum = 5;
 drop = 100;
-percentile = 5;
+percentile = 50;
 testPert = [0 0.058940989 0.129074508 0.202142206 0.278385168 0.359938995 0.450877783 0.562342129 0.728588577 1.063361881 2];
 percentSO = 0:0.05:0.9;
 CsoTest = CsoTestSet(algNum);
@@ -45,7 +45,6 @@ warning off;
 for l = 1:length(testPert)
     % Test for incrementing perturbation values
     ModelParameters.alpha_norm = testPert(l);
-    %CsoTest.ModelParameters = ModelParameters;
     
     % Initialize the testPlot structure for each test method
     for k = 1:algNum
@@ -136,7 +135,7 @@ for l = 1:length(testPert)
                 % SIR_dB = prctile(SIR_dB,50);
                 RawSIR(k,j,1) = SIR_dB;
                 RawSIR(k,j,2) = 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs;
-                CsoTest.TestBs(k).RawData = [CsoTest.TestBs(k).RawData TestData(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO(m),CD,SIR_dB)];
+                CsoTest.TestBs(k).RawData = [CsoTest.TestBs(k).RawData TestData(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO(m),CsoTest.InitialBs.CD,CD,SIR_dB)];
 %                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
 %                 SirData(((j-1)*10 + m + 1),:) = [percentSO, (SIR_dB - InitialSIR), 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs];
 %                 CsoTest.TestBs(k).TestPlot(l).SirData = SirData;
@@ -180,7 +179,7 @@ for l = 1:length(testPert)
 end
 warning on;
 
-save('data/Test_SOvsSIRdiffFarajData_a4_s0.mat', 'CsoTest');
+save('data/Test_SOvsSIRdiffFarajData_a4_s0_sir50.mat', 'CsoTest');
 runTime = toc;
 fprintf('Runtime: %f\n',runTime);
 close(hwait);
