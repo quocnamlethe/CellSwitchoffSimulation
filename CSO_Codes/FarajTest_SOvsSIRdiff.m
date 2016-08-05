@@ -13,13 +13,13 @@ ModelParameters.lambda = 200e-6;
 ChannelParamters = ChannelSetup(); 
 ChannelParamters.AssociationType = 'StrongestBS';
 ChannelParamters.SIRMericType = 'SIR';
-ChannelParamters.n = 3;
-ChannelParamters.Sigma_dB = 6;
+ChannelParamters.n = 4;
+ChannelParamters.Sigma_dB = 0;
 
 % Initialize the test set
 algNum = 5;
 drop = 100;
-percentile = 5;
+percentile = 50;
 testPert = [0 0.058940989 0.129074508 0.202142206 0.278385168 0.359938995 0.450877783 0.562342129 0.728588577 1.063361881 2];
 percentSO = 0:0.05:0.9;
 CsoTest = CsoTestSet(algNum);
@@ -44,8 +44,8 @@ plotData = zeros(100,3);
 warning off;
 for l = 1:length(testPert)
     % Test for incrementing perturbation values
-    ModelParameters.alpha_norm = testPert(l);
-    %CsoTest.ModelParameters = ModelParameters;
+    %ModelParameters.alpha_norm = testPert(l);
+    CsoTest.ModelParameters = ModelParameters;
     
     % Initialize the testPlot structure for each test method
     for k = 1:algNum
@@ -180,7 +180,7 @@ for l = 1:length(testPert)
 end
 warning on;
 
-save('data/Test_SOvsSIRdiffFarajData_a4_s0.mat', 'CsoTest');
+save('data/Test_SOvsSIRdiffFarajData_a4_s0_sir50.mat', 'CsoTest');
 runTime = toc;
 fprintf('Runtime: %f\n',runTime);
 close(hwait);
