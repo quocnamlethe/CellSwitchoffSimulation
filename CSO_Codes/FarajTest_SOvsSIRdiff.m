@@ -7,28 +7,28 @@ load('data/InitialBsSet.mat', 'BsSet');
 
 % Initialize the model parameters
 ModelParameters = ModelParaSet();
-ModelParameters.lambda = 200e-6;
+ModelParameters.lambda = 600e-6;
 
 % Initialize channel parameters
 ChannelParamters = ChannelSetup(); 
 ChannelParamters.AssociationType = 'StrongestBS';
 ChannelParamters.SIRMericType = 'SIR';
-ChannelParamters.n = 3;
-ChannelParamters.Sigma_dB = 6;
+ChannelParamters.n = 4;
+ChannelParamters.Sigma_dB = 0;
 
 % Initialize the test set
 algNum = 5;
-drop = 100;
+drop = 10;
 percentile = 5;
 testPert = [0 0.058940989 0.129074508 0.202142206 0.278385168 0.359938995 0.450877783 0.562342129 0.728588577 1.063361881 2];
-percentSO = 0:0.05:0.9;
+percentSO = [0.1 0.35 0.65 0.9];
 CsoTest = CsoTestSet(algNum);
 Cov = zeros(1,1); %TODO: FIX
 CovAvg = zeros(1,5);
 RawSIR = zeros(algNum,drop,2);
 
 % Initialize Users
- UsersIn=10000;
+ UsersIn=2000;
  User_ModlPrmtrs=ModelParaSet();        
  User_ModlPrmtrs.lambda=UsersIn*10^-6;
  User_ModlPrmtrs.win = ModelParameters.win * 0.6;
@@ -79,8 +79,8 @@ for l = 1:length(testPert)
             waitbar(((l - 1)*length(percentSO)*drop + (m - 1)*drop + j)/(length(testPert)*length(percentSO)*drop),hwait);
             
             % Generate base station locations
-            InitialBs = BsSet(pertIndex).BsSet(j).Bs;
-            %[InitialBs]= UT_LatticeBased('hexUni' , ModelParameters);
+            %InitialBs = BsSet(pertIndex).BsSet(j).Bs;
+            [InitialBs]= UT_LatticeBased('hexUni' , ModelParameters);
 
             % Generate user locations
             [User_Locations]=UT_LatticeBased('hexUni', User_ModlPrmtrs);
@@ -131,11 +131,9 @@ for l = 1:length(testPert)
                 [CN, CV, CD] = CoV_Metrics(CsoTest.TestBs(k).ActiveBs, ModelParameters);
                 
                 % 95th percentile
-                SIR_dB = prctile(SIR_dB,percentile);
-                % 50th percentile
-                % SIR_dB = prctile(SIR_dB,50);
-                RawSIR(k,j,1) = SIR_dB;
-                RawSIR(k,j,2) = 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs;
+                %SIR_dB = prctile(SIR_dB,percentile);
+                %RawSIR(k,j,1) = SIR_dB;
+                %RawSIR(k,j,2) = 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs;
                 CsoTest.TestBs(k).RawData = [CsoTest.TestBs(k).RawData TestData(CsoTest.TestBs(k).ActiveBs,CsoTest.TestBs(k).InactiveBs,testPert(l),percentSO(m),CsoTest.InitialBs.CD,CD,SIR_dB)];
 %                 SirData = CsoTest.TestBs(k).TestPlot(l).SirData;
 %                 SirData(((j-1)*10 + m + 1),:) = [percentSO, (SIR_dB - InitialSIR), 1 - size(CsoTest.TestBs(k).ActiveBs,1)/numBs];
@@ -146,16 +144,16 @@ for l = 1:length(testPert)
         % Get the median of tested input CoVs
         CovAvg(l) = mean(Cov);
         
-        for k = 1:algNum
-            if CovAvg(l) > 0.001
-            CsoTest.TestBs(k).TestPlot(l).Tag = num2str(CovAvg(l),2);
-            else
-                CsoTest.TestBs(k).TestPlot(l).Tag = '0';
-            end
-            CsoTest.TestBs(k).TestPlot(l).SirData(m,1) = percentSO(m);
-            CsoTest.TestBs(k).TestPlot(l).SirData(m,2) = mean(RawSIR(k,:,1));
-            CsoTest.TestBs(k).TestPlot(l).SirData(m,3) = mean(RawSIR(k,:,2));
-        end
+%         for k = 1:algNum
+%             if CovAvg(l) > 0.001
+%             CsoTest.TestBs(k).TestPlot(l).Tag = num2str(CovAvg(l),2);
+%             else
+%                 CsoTest.TestBs(k).TestPlot(l).Tag = '0';
+%             end
+%             CsoTest.TestBs(k).TestPlot(l).SirData(m,1) = percentSO(m);
+%             CsoTest.TestBs(k).TestPlot(l).SirData(m,2) = mean(RawSIR(k,:,1));
+%             CsoTest.TestBs(k).TestPlot(l).SirData(m,3) = mean(RawSIR(k,:,2));
+%         end
     end
     
 %     % Get the median of tested input CoVs
