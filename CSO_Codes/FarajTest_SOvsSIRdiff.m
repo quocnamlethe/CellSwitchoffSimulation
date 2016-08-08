@@ -18,10 +18,10 @@ ChannelParamters.Sigma_dB = 0;
 
 % Initialize the test set
 algNum = 5;
-drop = 10;
+drop = 100;
 percentile = 5;
 testPert = [0 0.058940989 0.129074508 0.202142206 0.278385168 0.359938995 0.450877783 0.562342129 0.728588577 1.063361881 2];
-percentSO = [0.1 0.35 0.65 0.9];
+percentSO = 0:0.05:0.9;
 CsoTest = CsoTestSet(algNum);
 Cov = zeros(1,1); %TODO: FIX
 CovAvg = zeros(1,5);
