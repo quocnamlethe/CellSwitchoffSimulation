@@ -2,7 +2,7 @@ function [] = PlotSOvsSIRdiff()
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
 
-    load('data/Test_SOvsSIRdiffFarajData_a3_s6.mat', 'CsoTest');
+    load('data/Test_SOvsSIRdiffFarajData_a3_s6_fixed.mat', 'CsoTest');
     
     LegendInfo = {'Random','Genie-aided','Greedy deletion','Greedy construction','Semi-greedy deletion'};
     LegendPosition = [0.50 0.15 0.45 0.35];
@@ -23,10 +23,13 @@ function [] = PlotSOvsSIRdiff()
     PPPSIR = cat(1,CsoTest.TestBs(1).RawData(PPPIndex).SIR);
     PPPSIR = prctile(PPPSIR,percentile);
     
-    TotalBs = zeros(length(percentSO),1);
-    for l = 1:length(percentSO)
-        SOIndex = round(cat(1,CsoTest.TestBs(1).RawData.SwitchOff)*1e2) == round(percentSO(l)*1e2);
-        SORaw = CsoTest.TestBs(1).RawData(SOIndex);
+    TotalBs = zeros(length(testPert),1);
+    
+    for l = 1:length(testPert)
+        PertIndex = round(cat(1,CsoTest.TestBs(1).RawData.Perturbation)*1e9) == round(testPert(l)*1e9);
+        PertRaw = CsoTest.TestBs(1).RawData(PertIndex);
+        SOIndex = round(cat(1,PertRaw.SwitchOff)*1e2) == 0;
+        SORaw = PertRaw(SOIndex);
         meanActive = mean(length(cat(1,SORaw.ActiveBs)));
         meanInactive = mean(length(cat(1,SORaw.InactiveBs)));
         TotalBs(l) = meanActive+meanInactive;
@@ -52,7 +55,7 @@ function [] = PlotSOvsSIRdiff()
                 allSIR = cat(1,SORaw(:).SIR);
                 tempSIR = prctile(allSIR,percentile);
                 meanActive = mean(length(cat(1,SORaw(:).ActiveBs)));
-                tempSO = mean((TotalBs(l)-meanActive)/TotalBs(l));
+                tempSO = mean((TotalBs(j)-meanActive)/TotalBs(j));
                 meanSIR(l,:) = [tempSO tempSIR];
             end
             plot(meanSIR(:,1),meanSIR(:,2) - PPPSIR,strcat('-',colours(k),markers(k)),'markersize',Marker_Size,'LineWidth',Line_Width);
