@@ -66,10 +66,10 @@ function [BaseStationSO] = BestPairwiseInterchangeSO(BaseStation,percentSO)
             f_SS = min(min(DistMat(SS,SS)));
             
             % Determine which pairwise interchange was best
-            if ((f_S1 > f_SS) && (f_S1 > f_S2))
+            if ((f_S1 > f_SS) && (f_S1 >= f_S2))
                 SS = S1;
                 new_S = 1;
-            elseif ((f_S2 > f_SS) && (f_S2 > f_S1))
+            elseif ((f_S2 > f_SS) && (f_S2 >= f_S1))
                 SS = S2;
                 new_S = 1;
             end
